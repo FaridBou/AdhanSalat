@@ -52,6 +52,13 @@
       text-align: center;
       margin-bottom: 1em;
     }
+    .debug {
+      background: #ffe0e0;
+      padding: 0.5em;
+      margin-top: 1em;
+      font-size: 0.9em;
+      color: #900;
+    }
   </style>
 </head>
 <body>
@@ -64,53 +71,70 @@
     <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
     <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
     <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
-    <button onclick="calculateTimes()">Mettre à jour</button>
-  </div>  <script src="https://cdn.jsdelivr.net/npm/adhan@4.0.0/dist/Adhan.min.js"></script>  <script>
+    <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
+    <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
+    <button onclick="calculateTimesManual()">Mettre à jour</button>
+  </div>  <div id="debug" class="debug"></div>  <script src="https://cdn.jsdelivr.net/npm/adhan@4.0.0/dist/Adhan.min.js"></script>  <script>
     function showError(message) {
       document.getElementById('error').textContent = message;
     }
 
-    function calculateTimes(coords = null) {
-      if (!coords) {
-        if (!navigator.geolocation) {
-          showError("La géolocalisation n'est pas supportée. Utilisation de la localisation par défaut (Nîmes).");
-          coords = { latitude: 43.8367, longitude: 4.3601 }; // Nîmes par défaut
-        } else {
-          navigator.geolocation.getCurrentPosition(
-            pos => calculateTimes(pos.coords),
-            err => {
-              showError("Localisation refusée. Utilisation de la position par défaut (Nîmes).");
-              calculateTimes({ latitude: 43.8367, longitude: 4.3601 });
-            }
-          );
-          return;
-        }
-      }
-
-      const params = adhan.CalculationMethod.Other();
-      params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-      params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-      params.maghribAngle = null;
-
-      const date = new Date();
-      const location = new adhan.Coordinates(coords.latitude, coords.longitude);
-      const prayerTimes = new adhan.PrayerTimes(location, date, params);
-
-      const maghribTime = prayerTimes.maghrib;
-      const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
-      const customIsha = new Date(maghribTime.getTime() + ishaOffset * 60000);
-
-      const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-
-      document.getElementById('times').innerHTML = `
-        <div class="prayer-time"><strong>Fajr</strong><span>${formatTime(prayerTimes.fajr)}</span></div>
-        <div class="prayer-time"><strong>Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
-        <div class="prayer-time"><strong>Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
-        <div class="prayer-time"><strong>Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
-        <div class="prayer-time"><strong>Isha</strong><span>${formatTime(customIsha)}</span></div>
-      `;
+    function showDebug(info) {
+      document.getElementById('debug').textContent = info;
     }
 
-    window.onload = () => calculateTimes();
+    function calculateTimes(coords) {
+      try {
+        const params = adhan.CalculationMethod.Other();
+        params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
+        params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
+        params.maghribAngle = null;
+
+        const date = new Date();
+        const location = new adhan.Coordinates(coords.latitude, coords.longitude);
+        const prayerTimes = new adhan.PrayerTimes(location, date, params);
+
+        const maghribTime = prayerTimes.maghrib;
+        const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
+        const customIsha = new Date(maghribTime.getTime() + ishaOffset * 60000);
+
+        const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+        document.getElementById('times').innerHTML = `
+          <div class="prayer-time"><strong>Fajr</strong><span>${formatTime(prayerTimes.fajr)}</span></div>
+          <div class="prayer-time"><strong>Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
+          <div class="prayer-time"><strong>Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
+          <div class="prayer-time"><strong>Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
+          <div class="prayer-time"><strong>Isha</strong><span>${formatTime(customIsha)}</span></div>
+        `;
+
+        showDebug(`Position utilisée: latitude ${coords.latitude}, longitude ${coords.longitude}`);
+      } catch (err) {
+        showError("Erreur lors du calcul des horaires.");
+        showDebug(err.toString());
+      }
+    }
+
+    function calculateTimesManual() {
+      const lat = parseFloat(document.getElementById('latitude').value);
+      const lon = parseFloat(document.getElementById('longitude').value);
+      calculateTimes({ latitude: lat, longitude: lon });
+    }
+
+    // Tentative auto au chargement
+    window.onload = () => {
+      if (!navigator.geolocation) {
+        showError("Géolocalisation non supportée. Utilisation de la position manuelle.");
+        calculateTimesManual();
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          pos => calculateTimes(pos.coords),
+          err => {
+            showError("Géolocalisation refusée. Utilisation de la position manuelle.");
+            calculateTimesManual();
+          }
+        );
+      }
+    };
   </script></body>
 </html>
