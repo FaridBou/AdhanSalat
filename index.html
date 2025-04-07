@@ -9,6 +9,22 @@
 <body>
   <h1>🕌 AdhanSalat - Horaires de prière</h1>
 
+  <label>Pays/Ville :
+    <select id="citySelector">
+      <option value="">-- Choisir --</option>
+      <option value="43.61,3.87">🇫🇷 Montpellier</option>
+      <option value="48.86,2.35">🇫🇷 Paris</option>
+      <option value="45.76,4.84">🇫🇷 Lyon</option>
+      <option value="43.29,5.37">🇫🇷 Marseille</option>
+      <option value="36.75,3.04">🇩🇿 Alger</option>
+      <option value="33.57,-7.59">🇲🇦 Casablanca</option>
+      <option value="24.71,46.67">🇸🇦 Riyadh</option>
+      <option value="21.42,39.83">🇸🇦 La Mecque</option>
+      <option value="31.96,35.93">🇯🇴 Amman</option>
+      <option value="40.71,-74.01">🇺🇸 New York</option>
+    </select>
+  </label><br>
+
   <label>Latitude : <input id="lat" type="number" value="43.61" step="0.01" /></label><br>
   <label>Longitude : <input id="lon" type="number" value="3.87" step="0.01" /></label><br>
   <label>Angle Fajr : <input id="fajr" type="number" value="18" /></label><br>
@@ -94,6 +110,16 @@
       ["fajrAdjust", "dhuhrAdjust", "asrAdjust", "maghribAdjust", "ishaAdjust"].forEach(generateAdjustmentOptions);
       calculate();
     };
+
+    document.getElementById("citySelector").addEventListener("change", e => {
+      const value = e.target.value;
+      if (value) {
+        const [lat, lon] = value.split(",");
+        document.getElementById("lat").value = lat;
+        document.getElementById("lon").value = lon;
+        calculate();
+      }
+    });
 
     // Exclusivité angle / intervalle Isha
     document.getElementById("ishaInterval").addEventListener("input", e => {
