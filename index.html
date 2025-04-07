@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <title>Adhan & Salat</title>
+  <title>AdhanSalat</title>
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
@@ -34,27 +34,30 @@
       gap: 1em;
     }
     .settings, #times {
-      flex: 1;
-      min-width: 300px;
-      background: #fff;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      flex: 1 1 300px;
     }
     .prayer-time {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       padding: 0.5em 1em;
       background: #fff;
       margin-bottom: 0.5em;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
+    .prayer-time.current {
+      background: #dce775;
+    }
     label, input, select {
       display: block;
       width: 100%;
       margin-top: 0.5em;
+    }
+    .settings {
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     .error {
       color: red;
@@ -70,9 +73,13 @@
       background: #121212;
       color: #e0e0e0;
     }
-    body.dark .prayer-time, body.dark .settings, body.dark #times {
+    body.dark .prayer-time, body.dark .settings {
       background: #1e1e1e;
       color: #e0e0e0;
+    }
+    body.dark .prayer-time.current {
+      background: #558b2f;
+      color: #fff;
     }
   </style>
 </head>
@@ -81,9 +88,6 @@
     <h1 id="title">AdhanSalat</h1>
     <p id="subtitle">Horaires de prière personnalisables</p>
   </header>
-
-  <div id="error" class="error"></div>
-  <div id="countdown"></div>
 
   <div class="container">
     <div class="settings">
@@ -116,13 +120,17 @@
       <button id="gpsBtn">📍 Utiliser ma position</button>
       <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
       <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
-      <label>Décalage Isha après Maghrib (minutes): <input type="number" id="maghribToIsha" value="80"></label>
+      <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
       <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
       <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
       <button onclick="calculateTimesManual()">Mettre à jour</button>
     </div>
 
-    <div id="times"></div>
+    <div>
+      <div id="error" class="error"></div>
+      <div id="countdown"></div>
+      <div id="times"></div>
+    </div>
   </div>
 
   <script src="adhan.js"></script>
@@ -133,7 +141,7 @@
       .then(data => {
         citiesData = data;
         const citySelect = document.getElementById('citySelector');
-        Object.entries(citiesData['France']).sort().forEach(([city, [lat, lon]]) => {
+        Object.entries(citiesData['France']).forEach(([city, [lat, lon]]) => {
           const opt = document.createElement('option');
           opt.value = `${lat},${lon}`;
           opt.textContent = city;
@@ -154,6 +162,22 @@
           const { latitude, longitude } = pos.coords;
           document.getElementById('latitude').value = latitude.toFixed(4);
           document.getElementById('longitude').value = longitude.toFixed(4);
+
+          // Trouver la ville la plus proche
+          let closestCity = null;
+          let minDist = Infinity;
+          for (const [city, [clat, clon]] of Object.entries(citiesData['France'])) {
+            const dist = Math.hypot(latitude - clat, longitude - clon);
+            if (dist < minDist) {
+              minDist = dist;
+              closestCity = { name: city, coords: [clat, clon] };
+            }
+          }
+
+          if (closestCity) {
+            document.getElementById('citySelector').value = closestCity.coords.join(',');
+          }
+
           calculateTimes({ latitude, longitude });
         }, err => {
           showError("Erreur GPS : " + err.message);
@@ -232,14 +256,27 @@
         const nextTime = prayerTimes.timeForPrayer(nextPrayer);
 
         const format = formatTime;
-        document.getElementById('times').innerHTML = `
-          <div class="prayer-time">🕊️ <strong>Fajr</strong><span>${format(prayerTimes.fajr)}</span></div>
-          <div class="prayer-time">🌞 <strong>Dhuhr</strong><span>${format(prayerTimes.dhuhr)}</span></div>
-          <div class="prayer-time">🕒 <strong>Asr</strong><span>${format(prayerTimes.asr)}</span></div>
-          <div class="prayer-time">🌇 <strong>Maghrib</strong><span>${format(prayerTimes.maghrib)}</span></div>
-          <div class="prayer-time">🌙 <strong>Isha</strong><span>${format(prayerTimes.isha)}</span></div>
-          <div class="prayer-time">🧭 <strong>Qibla</strong><span>${qiblaAngle}°</span></div>
-        `;
+        const prayerNames = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+        const times = {
+          fajr: prayerTimes.fajr,
+          dhuhr: prayerTimes.dhuhr,
+          asr: prayerTimes.asr,
+          maghrib: prayerTimes.maghrib,
+          isha: prayerTimes.isha
+        };
+
+        document.getElementById('times').innerHTML = '';
+        prayerNames.forEach(name => {
+          const div = document.createElement('div');
+          div.className = 'prayer-time' + (nextPrayer === name ? ' current' : '');
+          div.innerHTML = `<strong>${name.charAt(0).toUpperCase() + name.slice(1)}</strong><span>${format(times[name])}</span>`;
+          document.getElementById('times').appendChild(div);
+        });
+
+        const qiblaDiv = document.createElement('div');
+        qiblaDiv.className = 'prayer-time';
+        qiblaDiv.innerHTML = `<strong>Qibla</strong><span>${qiblaAngle}°</span>`;
+        document.getElementById('times').appendChild(qiblaDiv);
 
         updateCountdown(nextTime, nextPrayer);
       } catch (err) {
