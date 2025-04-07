@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <title>AdhanSalat</title>
+  <title>Adhan & Salat</title>
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
@@ -28,9 +28,23 @@
       text-align: center;
       margin-bottom: 1em;
     }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+    }
+    .settings, #times {
+      flex: 1;
+      min-width: 300px;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
     .prayer-time {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       padding: 0.5em 1em;
       background: #fff;
       margin-bottom: 0.5em;
@@ -41,13 +55,6 @@
       display: block;
       width: 100%;
       margin-top: 0.5em;
-    }
-    .settings {
-      background: #fff;
-      padding: 1em;
-      margin-bottom: 1em;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     .error {
       color: red;
@@ -63,7 +70,7 @@
       background: #121212;
       color: #e0e0e0;
     }
-    body.dark .prayer-time, body.dark .settings {
+    body.dark .prayer-time, body.dark .settings, body.dark #times {
       background: #1e1e1e;
       color: #e0e0e0;
     }
@@ -75,48 +82,50 @@
     <p id="subtitle">Horaires de prière personnalisables</p>
   </header>
 
-  <div class="settings">
-    <h2>Réglages</h2>
-    <label>Thème :
-      <select id="themeSelect">
-        <option value="auto">Auto</option>
-        <option value="light">Clair</option>
-        <option value="dark">Sombre</option>
-      </select>
-    </label>
-    <label>Langue :
-      <select id="langSelect">
-        <option value="fr">Français</option>
-        <option value="en">English</option>
-        <option value="ar">العربية</option>
-      </select>
-    </label>
-    <label>Pays :
-      <select id="countrySelector">
-        <option value="">-- Choisir un pays --</option>
-        <option value="France">France</option>
-      </select>
-    </label>
-    <label>Ville :
-      <select id="citySelector">
-        <option value="">-- Choisir une ville --</option>
-      </select>
-    </label>
-    <button id="gpsBtn">📍 Utiliser ma position</button>
-    <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
-    <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
-    <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
-    <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
-    <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
-    <button onclick="calculateTimesManual()">Mettre à jour</button>
-  </div>
-
   <div id="error" class="error"></div>
   <div id="countdown"></div>
-  <div id="times"></div>
+
+  <div class="container">
+    <div class="settings">
+      <h2>Réglages</h2>
+      <label>Thème :
+        <select id="themeSelect">
+          <option value="auto">Auto</option>
+          <option value="light">Clair</option>
+          <option value="dark">Sombre</option>
+        </select>
+      </label>
+      <label>Langue :
+        <select id="langSelect">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+      <label>Pays :
+        <select id="countrySelector">
+          <option value="">-- Choisir un pays --</option>
+          <option value="France">France</option>
+        </select>
+      </label>
+      <label>Ville :
+        <select id="citySelector">
+          <option value="">-- Choisir une ville --</option>
+        </select>
+      </label>
+      <button id="gpsBtn">📍 Utiliser ma position</button>
+      <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
+      <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
+      <label>Décalage Isha après Maghrib (minutes): <input type="number" id="maghribToIsha" value="80"></label>
+      <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
+      <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
+      <button onclick="calculateTimesManual()">Mettre à jour</button>
+    </div>
+
+    <div id="times"></div>
+  </div>
 
   <script src="adhan.js"></script>
-  <script src="cities.json"></script>
   <script>
     let citiesData = {};
     fetch('cities.json')
@@ -124,7 +133,7 @@
       .then(data => {
         citiesData = data;
         const citySelect = document.getElementById('citySelector');
-        Object.entries(citiesData['France']).forEach(([city, [lat, lon]]) => {
+        Object.entries(citiesData['France']).sort().forEach(([city, [lat, lon]]) => {
           const opt = document.createElement('option');
           opt.value = `${lat},${lon}`;
           opt.textContent = city;
@@ -224,12 +233,12 @@
 
         const format = formatTime;
         document.getElementById('times').innerHTML = `
-          <div class="prayer-time"><strong>Fajr</strong><span>${format(prayerTimes.fajr)}</span></div>
-          <div class="prayer-time"><strong>Dhuhr</strong><span>${format(prayerTimes.dhuhr)}</span></div>
-          <div class="prayer-time"><strong>Asr</strong><span>${format(prayerTimes.asr)}</span></div>
-          <div class="prayer-time"><strong>Maghrib</strong><span>${format(prayerTimes.maghrib)}</span></div>
-          <div class="prayer-time"><strong>Isha</strong><span>${format(prayerTimes.isha)}</span></div>
-          <div class="prayer-time"><strong>Qibla</strong><span>${qiblaAngle}°</span></div>
+          <div class="prayer-time">🕊️ <strong>Fajr</strong><span>${format(prayerTimes.fajr)}</span></div>
+          <div class="prayer-time">🌞 <strong>Dhuhr</strong><span>${format(prayerTimes.dhuhr)}</span></div>
+          <div class="prayer-time">🕒 <strong>Asr</strong><span>${format(prayerTimes.asr)}</span></div>
+          <div class="prayer-time">🌇 <strong>Maghrib</strong><span>${format(prayerTimes.maghrib)}</span></div>
+          <div class="prayer-time">🌙 <strong>Isha</strong><span>${format(prayerTimes.isha)}</span></div>
+          <div class="prayer-time">🧭 <strong>Qibla</strong><span>${qiblaAngle}°</span></div>
         `;
 
         updateCountdown(nextTime, nextPrayer);
