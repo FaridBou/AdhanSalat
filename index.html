@@ -7,14 +7,14 @@
   <link rel="manifest" href="manifest.json" />
 </head>
 <body>
-  <h1>🌽 Adhan O'Salat - Horaires de prière</h1>
+  <h1>🕌 Adhan & Salat - Horaires de prière</h1>
 
   <label>Pays :
     <select id="countrySelector">
       <option value="">-- Choisir un pays --</option>
     </select>
   </label><br>
-  
+
   <label>Ville :
     <select id="citySelector">
       <option value="">-- Choisir une ville --</option>
@@ -23,8 +23,8 @@
 
   <button id="gpsBtn">📍 Utiliser ma position</button><br><br>
 
-  <label>Latitude : <input id="lat" type="number" value="43.61" step="0.01" /></label><br>
-  <label>Longitude : <input id="lon" type="number" value="3.87" step="0.01" /></label><br>
+  <label>Latitude : <input id="lat" type="number" step="0.01" /></label><br>
+  <label>Longitude : <input id="lon" type="number" step="0.01" /></label><br>
   <label>Angle Fajr : <input id="fajr" type="number" value="18" /></label><br>
   <label>Angle Isha : <input id="isha" type="number" value="17" /></label><br>
   <label>OU écart Isha (minutes) : <input id="ishaInterval" type="number" value="0" /></label><br><br>
@@ -43,31 +43,46 @@
 
   <script src="adhan.js"></script>
   <script>
-    let citiesData = {}; // contiendra toutes les villes FR (nom → [lat, lon])
+    let citiesData = {};
 
-    // Charger la liste des villes (fichier .json)
     fetch("cities.json")
       .then(res => res.json())
       .then(data => {
         citiesData = data;
-        const citySelect = document.getElementById("citySelector");
-        Object.entries(citiesData).forEach(([city, coords]) => {
+        const countrySelect = document.getElementById("countrySelector");
+
+        for (const country in citiesData) {
+          const opt = document.createElement("option");
+          opt.value = country;
+          opt.textContent = country;
+          countrySelect.appendChild(opt);
+        }
+      });
+
+    document.getElementById("countrySelector").addEventListener("change", function () {
+      const selectedCountry = this.value;
+      const citySelect = document.getElementById("citySelector");
+      citySelect.innerHTML = '<option value="">-- Choisir une ville --</option>';
+
+      if (citiesData[selectedCountry]) {
+        for (const city in citiesData[selectedCountry]) {
+          const coords = citiesData[selectedCountry][city];
           const opt = document.createElement("option");
           opt.value = coords.join(",");
           opt.textContent = city;
           citySelect.appendChild(opt);
-        });
-      });
+        }
+      }
+    });
 
-    // Calcul de la distance Haversine
-    function distance(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const toRad = x => x * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
-      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    }
+    document.getElementById("citySelector").addEventListener("change", function () {
+      const coords = this.value.split(",");
+      if (coords.length === 2) {
+        document.getElementById("lat").value = coords[0];
+        document.getElementById("lon").value = coords[1];
+        calculate();
+      }
+    });
 
     document.getElementById("gpsBtn").addEventListener("click", () => {
       if (navigator.geolocation) {
@@ -76,20 +91,29 @@
           document.getElementById("lat").value = latitude.toFixed(4);
           document.getElementById("lon").value = longitude.toFixed(4);
 
-          let closestCity = null;
-          let minDist = Infinity;
-          for (const [city, [clat, clon]] of Object.entries(citiesData)) {
-            const dist = distance(latitude, longitude, clat, clon);
-            if (dist < minDist) {
-              minDist = dist;
-              closestCity = { name: city, coords: [clat, clon] };
+          let closest = { country: null, city: null, coords: null, dist: Infinity };
+
+          for (const country in citiesData) {
+            for (const city in citiesData[country]) {
+              const [clat, clon] = citiesData[country][city];
+              const d = distance(latitude, longitude, clat, clon);
+              if (d < closest.dist) {
+                closest = { country, city, coords: [clat, clon], dist: d };
+              }
             }
           }
 
-          if (closestCity) {
-            const citySelect = document.getElementById("citySelector");
-            citySelect.value = closestCity.coords.join(",");
-            citySelect.dispatchEvent(new Event("change"));
+          if (closest.city) {
+            const countrySelector = document.getElementById("countrySelector");
+            const citySelector = document.getElementById("citySelector");
+
+            countrySelector.value = closest.country;
+            countrySelector.dispatchEvent(new Event("change"));
+
+            setTimeout(() => {
+              citySelector.value = closest.coords.join(",");
+              citySelector.dispatchEvent(new Event("change"));
+            }, 100);
           }
 
         }, err => {
@@ -100,12 +124,14 @@
       }
     });
 
-    document.getElementById("citySelector").addEventListener("change", function () {
-      const [lat, lon] = this.value.split(",");
-      document.getElementById("lat").value = lat;
-      document.getElementById("lon").value = lon;
-      calculate();
-    });
+    function distance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const toRad = x => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
 
     function formatTime(date) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
