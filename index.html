@@ -1,194 +1,68 @@
-<!DOCTYPE html><html lang="fr">
+
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
+  <meta charset="UTF-8" />
   <title>AdhanSalat</title>
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('Service worker enregistré:', reg.scope))
-          .catch(err => console.log('Échec enregistrement service worker:', err));
-      });
-    }
-  </script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #eef2f3, #ffffff);
-      color: #333;
-      margin: 0;
-      padding: 1em;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 0.2em;
-    }
-    .prayer-time {
-      display: flex;
-      justify-content: space-between;
-      padding: 1em;
-      background: #fff;
-      margin-bottom: 0.7em;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .prayer-time:hover {
-      transform: scale(1.02);
-    }
-    label, input, select {
-      display: block;
-      width: 100%;
-      margin-top: 0.5em;
-      font-size: 1em;
-    }
-    .settings {
-      background: #ffffff;
-      padding: 1.5em;
-      margin-top: 2em;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
-    }
-    .settings h2 {
-      margin-top: 0;
-    }
-    button {
-      padding: 0.8em;
-      margin-top: 1em;
-      font-size: 1em;
-      background: #3f8efc;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .error {
-      color: red;
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    .debug {
-      background: #fff0f0;
-      padding: 0.5em;
-      margin-top: 1em;
-      font-size: 0.85em;
-      color: #900;
-      border-radius: 8px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
-  <header>
-    <h1>AdhanSalat</h1>
-    <p>Horaires de prière personnalisables - Mode Offline</p>
-  </header>  <div id="error" class="error"></div>
-  <div id="times"></div>  <div class="settings">
-    <h2>Réglages</h2>
-    <label>Pays :
-      <select id="country" onchange="updateCities()">
-        <option value="France">France</option>
-      </select>
-    </label><label>Ville :
-  <select id="city" onchange="updateCoordinates()">
-    <option value="Nimes">Nîmes</option>
-    <option value="Paris">Paris</option>
-    <option value="Lyon">Lyon</option>
-    <option value="Marseille">Marseille</option>
-  </select>
-</label>
+  <h1>🕌 AdhanSalat - Horaires de prière</h1>
+  <label>Latitude : <input id="lat" type="number" value="43.61" step="0.01" /></label><br>
+  <label>Longitude : <input id="lon" type="number" value="3.87" step="0.01" /></label><br>
+  <label>Angle Fajr : <input id="fajr" type="number" value="18" /></label><br>
+  <label>Angle Isha : <input id="isha" type="number" value="17" /></label><br>
+  <label>OU écart Isha (minutes) : <input id="ishaInterval" type="number" value="0" /></label><br><br>
+  <button onclick="calculate()">Calculer</button>
 
-<label>Latitude : <input type="number" id="latitude" step="any" value="43.8367"></label>
-<label>Longitude : <input type="number" id="longitude" step="any" value="4.3601"></label>
-<label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
-<label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
-<label>Décalage Isha après Maghreb (minutes, laisser vide pour utiliser angle) : <input type="number" id="maghribToIsha"></label>
-<button onclick="calculateTimesManual()">Mettre à jour</button>
+  <h2>Horaires :</h2>
+  <ul id="times"></ul>
 
-<script src="adhan.js"></script>  <script>
-      
-  </div>  <div id="debug" class="debug"></div>  
-    const cityData = {
-      Nimes: { lat: 43.8367, lon: 4.3601 },
-      Paris: { lat: 48.8566, lon: 2.3522 },
-      Lyon: { lat: 45.75, lon: 4.85 },
-      Marseille: { lat: 43.2965, lon: 5.3698 }
-    };
-
-    function updateCities() {}
-
-    function updateCoordinates() {
-      const city = document.getElementById("city").value;
-      document.getElementById("latitude").value = cityData[city].lat;
-      document.getElementById("longitude").value = cityData[city].lon;
+  <script src="adhan.js"></script>
+  <script>
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    function showError(message) {
-      document.getElementById('error').textContent = message;
-    }
+    function calculate() {
+      const lat = parseFloat(document.getElementById("lat").value);
+      const lon = parseFloat(document.getElementById("lon").value);
+      const fajrAngle = parseFloat(document.getElementById("fajr").value);
+      const ishaAngle = parseFloat(document.getElementById("isha").value);
+      const ishaInterval = parseInt(document.getElementById("ishaInterval").value);
 
-    function showDebug(info) {
-      document.getElementById('debug').textContent = info;
-    }
+      const coordinates = new adhan.Coordinates(lat, lon);
+      const params = new adhan.CalculationParameters("Other", fajrAngle, ishaAngle);
+      params.madhab = adhan.Madhab.Shafi;
 
-    function calculateTimes(coords) {
-      try {
-        const params = adhan.CalculationMethod.Other();
-        params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-        const ishaOffsetInput = document.getElementById('maghribToIsha').value;
-        const useOffset = ishaOffsetInput !== '' && !isNaN(parseInt(ishaOffsetInput));
+      if (ishaInterval > 0) {
+        params.ishaAngle = 0;
+        params.ishaInterval = ishaInterval;
+      }
 
-        if (useOffset) {
-          params.ishaAngle = 0; // annuler le calcul par angle si on utilise un décalage
-        } else {
-          params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-        }
+      const date = new Date();
+      const prayerTimes = new adhan.PrayerTimes(coordinates, date, params);
 
-        const date = new Date();
-        const location = new adhan.Coordinates(coords.latitude, coords.longitude);
-        const prayerTimes = new adhan.PrayerTimes(location, date, params);
+      const times = {
+        Fajr: formatTime(prayerTimes.fajr),
+        Sunrise: formatTime(prayerTimes.sunrise),
+        Dhuhr: formatTime(prayerTimes.dhuhr),
+        Asr: formatTime(prayerTimes.asr),
+        Maghrib: formatTime(prayerTimes.maghrib),
+        Isha: formatTime(prayerTimes.isha)
+      };
 
-        let ishaTime;
-        if (useOffset) {
-          const maghribTime = prayerTimes.maghrib;
-          const offsetMinutes = parseInt(ishaOffsetInput);
-          ishaTime = new Date(maghribTime.getTime() + offsetMinutes * 60000);
-        } else {
-          ishaTime = prayerTimes.isha;
-        }
-
-        const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-
-        document.getElementById('times').innerHTML = `
-          <div class="prayer-time"><strong>Fajr</strong><span>${formatTime(prayerTimes.fajr)}</span></div>
-          <div class="prayer-time"><strong>Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
-          <div class="prayer-time"><strong>Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
-          <div class="prayer-time"><strong>Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
-          <div class="prayer-time"><strong>Isha</strong><span>${formatTime(ishaTime)}</span></div>
-        `;
-
-        showDebug(`Ville : ${document.getElementById("city").value}, Lat : ${coords.latitude}, Lon : ${coords.longitude}`);
-      } catch (err) {
-        showError("Erreur lors du calcul des horaires.");
-        showDebug(err.toString());
+      const list = document.getElementById("times");
+      list.innerHTML = "";
+      for (const [name, time] of Object.entries(times)) {
+        const li = document.createElement("li");
+        li.textContent = `${name} : ${time}`;
+        list.appendChild(li);
       }
     }
 
-    function calculateTimesManual() {
-      const lat = parseFloat(document.getElementById('latitude').value);
-      const lon = parseFloat(document.getElementById('longitude').value);
-      calculateTimes({ latitude: lat, longitude: lon });
-    }
-
-    window.onload = () => {
-      updateCoordinates();
-      calculateTimesManual();
-    };
-  </script></body>
+    window.onload = calculate;
+  </script>
+</body>
 </html>
