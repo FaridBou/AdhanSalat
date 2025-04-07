@@ -18,10 +18,10 @@
   <style>
     body {
       font-family: sans-serif;
+      background: #f9f9f9;
+      color: #333;
       margin: 0;
       padding: 1em;
-      background: var(--bg-color);
-      color: var(--text-color);
       transition: background 0.3s, color 0.3s;
     }
     header {
@@ -32,7 +32,7 @@
       display: flex;
       justify-content: space-between;
       padding: 0.5em 1em;
-      background: var(--card-bg);
+      background: #fff;
       margin-bottom: 0.5em;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
@@ -43,9 +43,9 @@
       margin-top: 0.5em;
     }
     .settings {
-      background: var(--card-bg);
+      background: #fff;
       padding: 1em;
-      margin-top: 1em;
+      margin-bottom: 1em;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
@@ -54,51 +54,43 @@
       text-align: center;
       margin-bottom: 1em;
     }
-    .debug {
-      background: #ffe0e0;
-      padding: 0.5em;
-      margin-top: 1em;
-      font-size: 0.9em;
-      color: #900;
+    #countdown {
+      text-align: center;
+      font-size: 1.2em;
+      margin-bottom: 1em;
     }
-    .dark {
-      --bg-color: #111;
-      --text-color: #f1f1f1;
-      --card-bg: #222;
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
     }
-    .light {
-      --bg-color: #f9f9f9;
-      --text-color: #333;
-      --card-bg: #fff;
+    body.dark .prayer-time, body.dark .settings {
+      background: #1e1e1e;
+      color: #e0e0e0;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>AdhanSalat</h1>
+    <h1 id="title">AdhanSalat</h1>
     <p id="subtitle">Horaires de prière personnalisables</p>
-    <label>Langue:
-      <select id="langSelect">
-        <option value="fr">Français</option>
-        <option value="en">English</option>
-        <option value="ar">العربية</option>
-      </select>
-    </label>
-    <label>Thème:
+  </header>
+
+  <div class="settings">
+    <h2>Réglages</h2>
+    <label>Thème :
       <select id="themeSelect">
         <option value="auto">Auto</option>
         <option value="light">Clair</option>
         <option value="dark">Sombre</option>
       </select>
     </label>
-  </header>
-
-  <div id="error" class="error"></div>
-  <div id="times"></div>
-  <div id="qibla"></div>
-
-  <div class="settings">
-    <h2>Réglages</h2>
+    <label>Langue :
+      <select id="langSelect">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+        <option value="ar">العربية</option>
+      </select>
+    </label>
     <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
     <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
     <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
@@ -107,86 +99,93 @@
     <button onclick="calculateTimesManual()">Mettre à jour</button>
   </div>
 
-  <div id="debug" class="debug"></div>
+  <div id="error" class="error"></div>
+  <div id="countdown"></div>
+  <div id="times"></div>
 
   <script src="adhan.js"></script>
   <script>
-    const themeSelect = document.getElementById("themeSelect");
-    const langSelect = document.getElementById("langSelect");
+    const titleMap = {
+      fr: 'AdhanSalat',
+      en: 'Prayer Times',
+      ar: 'أوقات الصلاة'
+    };
+    const subtitleMap = {
+      fr: 'Horaires de prière personnalisables',
+      en: 'Customizable prayer times',
+      ar: 'مواقيت الصلاة القابلة للتخصيص'
+    };
 
-    function applyTheme(mode) {
-      const html = document.documentElement;
-      if (mode === "dark") html.className = "dark";
-      else if (mode === "light") html.className = "light";
-      else html.className = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    function updateLangUI(lang) {
+      document.getElementById('title').textContent = titleMap[lang];
+      document.getElementById('subtitle').textContent = subtitleMap[lang];
     }
-    themeSelect.addEventListener("change", e => applyTheme(e.target.value));
-    applyTheme(themeSelect.value);
 
-    langSelect.addEventListener("change", e => {
-      const lang = e.target.value;
-      const subtitle = document.getElementById("subtitle");
-      if (lang === "fr") subtitle.textContent = "Horaires de prière personnalisables";
-      if (lang === "en") subtitle.textContent = "Customizable Prayer Times";
-      if (lang === "ar") subtitle.textContent = "مواقيت الصلاة قابلة للتخصيص";
-    });
+    function applyTheme(theme) {
+      document.body.classList.remove('dark');
+      if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark');
+      }
+    }
 
     function showError(message) {
       document.getElementById('error').textContent = message;
     }
-    function showDebug(info) {
-      document.getElementById('debug').textContent = info;
-    }
+
     function formatTime(time) {
       return time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     }
-    function calculateQibla(coords) {
-      const makkah = new adhan.Coordinates(21.4225, 39.8262);
-      const qiblaAngle = adhan.Qibla(new adhan.Coordinates(coords.latitude, coords.longitude));
-      document.getElementById("qibla").innerHTML = `<p>🧭 Qibla: ${qiblaAngle.toFixed(1)}°</p>`;
+
+    function updateCountdown(nextTime, nextName) {
+      function tick() {
+        const now = new Date();
+        const diff = nextTime - now;
+        if (diff <= 0) {
+          document.getElementById('countdown').textContent = `${nextName} maintenant`;
+          return;
+        }
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdown').textContent = `Prochaine prière (${nextName}) dans ${h}h ${m}m ${s}s`;
+        requestAnimationFrame(tick);
+      }
+      tick();
     }
+
     function calculateTimes(coords) {
       try {
+        const angleIshaInput = document.getElementById('angleIsha');
+        const maghribToIsha = parseInt(document.getElementById('maghribToIsha').value);
+        angleIshaInput.disabled = maghribToIsha > 0;
+
         const params = adhan.CalculationMethod.Other();
         params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-        params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-        params.maghribAngle = null;
+        params.ishaAngle = maghribToIsha > 0 ? 0 : parseFloat(document.getElementById('angleIsha').value);
+        params.ishaInterval = maghribToIsha > 0 ? maghribToIsha : 0;
 
         const date = new Date();
         const location = new adhan.Coordinates(coords.latitude, coords.longitude);
         const prayerTimes = new adhan.PrayerTimes(location, date, params);
 
-        const maghribTime = prayerTimes.maghrib;
-        const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
-        const customIsha = new Date(maghribTime.getTime() + ishaOffset * 60000);
+        const qiblaAngle = Math.round(adhan.Qibla(location));
 
-        const now = new Date();
-        const times = [
-          {name: "Fajr", time: prayerTimes.fajr},
-          {name: "Dhuhr", time: prayerTimes.dhuhr},
-          {name: "Asr", time: prayerTimes.asr},
-          {name: "Maghrib", time: prayerTimes.maghrib},
-          {name: "Isha", time: customIsha},
-        ];
-        const current = times.slice().reverse().find(p => now >= p.time) || {name: "-", time: now};
-        const next = times.find(p => now < p.time) || {name: "-", time: now};
-        const remaining = Math.max(0, Math.floor((next.time - now) / 60000));
+        const nextPrayer = prayerTimes.nextPrayer(date);
+        const nextTime = prayerTimes.timeForPrayer(nextPrayer);
 
-        document.getElementById('times').innerHTML =
-          `<p>📌 Prière actuelle : <strong>${current.name}</strong></p>
-           <p>⏭️ Prochaine : <strong>${next.name}</strong> dans ${remaining} min</p>` +
-          times.map(p => `<div class="prayer-time"><strong>🕋 ${p.name}</strong><span>${formatTime(p.time)}</span></div>`).join('');
+        const format = formatTime;
+        document.getElementById('times').innerHTML = `
+          <div class="prayer-time"><strong>Fajr</strong><span>${format(prayerTimes.fajr)}</span></div>
+          <div class="prayer-time"><strong>Dhuhr</strong><span>${format(prayerTimes.dhuhr)}</span></div>
+          <div class="prayer-time"><strong>Asr</strong><span>${format(prayerTimes.asr)}</span></div>
+          <div class="prayer-time"><strong>Maghrib</strong><span>${format(prayerTimes.maghrib)}</span></div>
+          <div class="prayer-time"><strong>Isha</strong><span>${format(prayerTimes.isha)}</span></div>
+          <div class="prayer-time"><strong>Qibla</strong><span>${qiblaAngle}°</span></div>
+        `;
 
-        showDebug(`Position utilisée: latitude ${coords.latitude}, longitude ${coords.longitude}`);
-        calculateQibla(coords);
-
-        if (Notification.permission === "granted" && remaining <= 5 && remaining > 0) {
-          new Notification("Prochaine prière dans " + remaining + " minutes: " + next.name);
-          if (navigator.vibrate) navigator.vibrate([100, 200, 100]);
-        }
+        updateCountdown(nextTime, nextPrayer);
       } catch (err) {
         showError("Erreur lors du calcul des horaires.");
-        showDebug(err.toString());
       }
     }
 
@@ -196,7 +195,16 @@
       calculateTimes({ latitude: lat, longitude: lon });
     }
 
+    // Auto load
     window.onload = () => {
+      document.getElementById('themeSelect').addEventListener('change', e => applyTheme(e.target.value));
+      document.getElementById('langSelect').addEventListener('change', e => updateLangUI(e.target.value));
+
+      const theme = document.getElementById('themeSelect').value;
+      const lang = document.getElementById('langSelect').value;
+      applyTheme(theme);
+      updateLangUI(lang);
+
       if (!navigator.geolocation) {
         showError("Géolocalisation non supportée. Utilisation de la position manuelle.");
         calculateTimesManual();
@@ -208,10 +216,6 @@
             calculateTimesManual();
           }
         );
-      }
-
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission();
       }
     };
   </script>
