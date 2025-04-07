@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!DOCTYPE html><html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,8 +16,8 @@
   </script>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f9f9f9;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #eef2f3, #ffffff);
       color: #333;
       margin: 0;
       padding: 1em;
@@ -27,26 +26,48 @@
       text-align: center;
       margin-bottom: 1em;
     }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.2em;
+    }
     .prayer-time {
       display: flex;
       justify-content: space-between;
-      padding: 0.5em 1em;
+      padding: 1em;
       background: #fff;
-      margin-bottom: 0.5em;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      margin-bottom: 0.7em;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .prayer-time:hover {
+      transform: scale(1.02);
     }
     label, input, select {
       display: block;
       width: 100%;
       margin-top: 0.5em;
+      font-size: 1em;
     }
     .settings {
-      background: #fff;
-      padding: 1em;
+      background: #ffffff;
+      padding: 1.5em;
+      margin-top: 2em;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    }
+    .settings h2 {
+      margin-top: 0;
+    }
+    button {
+      padding: 0.8em;
       margin-top: 1em;
+      font-size: 1em;
+      background: #3f8efc;
+      color: white;
+      border: none;
       border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
     }
     .error {
       color: red;
@@ -54,11 +75,12 @@
       margin-bottom: 1em;
     }
     .debug {
-      background: #ffe0e0;
+      background: #fff0f0;
       padding: 0.5em;
       margin-top: 1em;
-      font-size: 0.9em;
+      font-size: 0.85em;
       color: #900;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -66,12 +88,8 @@
   <header>
     <h1>AdhanSalat</h1>
     <p>Horaires de prière personnalisables</p>
-  </header>
-
-  <div id="error" class="error"></div>
-  <div id="times"></div>
-
-  <div class="settings">
+  </header>  <div id="error" class="error"></div>
+  <div id="times"></div>  <div class="settings">
     <h2>Réglages</h2>
     <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
     <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
@@ -79,12 +97,7 @@
     <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
     <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
     <button onclick="calculateTimesManual()">Mettre à jour</button>
-  </div>
-
-  <div id="debug" class="debug"></div>
-
-  <script src="adhan.js"></script>
-  <script>
+  </div>  <div id="debug" class="debug"></div>  <script src="adhan.js"></script>  <script>
     function showError(message) {
       document.getElementById('error').textContent = message;
     }
@@ -146,6 +159,5 @@
         );
       }
     };
-  </script>
-</body>
+  </script></body>
 </html>
