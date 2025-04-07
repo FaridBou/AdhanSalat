@@ -9,12 +9,6 @@
 <body>
   <h1>🌽 Adhan O'Salat - Horaires de prière</h1>
 
-  <label>Pays :
-    <select id="countrySelector">
-      <option value="">-- Choisir un pays --</option>
-    </select>
-  </label><br>
-
   <label>Ville :
     <select id="citySelector">
       <option value="">-- Choisir une ville --</option>
@@ -43,45 +37,68 @@
 
   <script src="adhan.js"></script>
   <script>
-    let citiesData = {};
+    let citiesData = {}; // contiendra toutes les villes FR (nom → [lat, lon])
 
-    fetch('cities.json')
+    // Charger la liste des villes (fichier .json)
+    fetch("cities.json")
       .then(res => res.json())
       .then(data => {
         citiesData = data;
-        const countrySelect = document.getElementById('countrySelector');
-        for (const country in data) {
-          const opt = document.createElement('option');
-          opt.value = country;
-          opt.textContent = country;
-          countrySelect.appendChild(opt);
-        }
-      });
-
-    document.getElementById("countrySelector").addEventListener("change", function () {
-      const country = this.value;
-      const citySelect = document.getElementById('citySelector');
-      citySelect.innerHTML = '<option value="">-- Choisir une ville --</option>';
-
-      if (citiesData[country]) {
-        for (const city in citiesData[country]) {
-          const opt = document.createElement('option');
-          opt.value = city;
+        const citySelect = document.getElementById("citySelector");
+        Object.entries(citiesData).forEach(([city, coords]) => {
+          const opt = document.createElement("option");
+          opt.value = coords.join(",");
           opt.textContent = city;
           citySelect.appendChild(opt);
-        }
+        });
+      });
+
+    // Calcul de la distance Haversine
+    function distance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const toRad = x => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    document.getElementById("gpsBtn").addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          document.getElementById("lat").value = latitude.toFixed(4);
+          document.getElementById("lon").value = longitude.toFixed(4);
+
+          let closestCity = null;
+          let minDist = Infinity;
+          for (const [city, [clat, clon]] of Object.entries(citiesData)) {
+            const dist = distance(latitude, longitude, clat, clon);
+            if (dist < minDist) {
+              minDist = dist;
+              closestCity = { name: city, coords: [clat, clon] };
+            }
+          }
+
+          if (closestCity) {
+            const citySelect = document.getElementById("citySelector");
+            citySelect.value = closestCity.coords.join(",");
+            citySelect.dispatchEvent(new Event("change"));
+          }
+
+        }, err => {
+          alert("Erreur GPS : " + err.message);
+        });
+      } else {
+        alert("Géolocalisation non supportée");
       }
     });
 
     document.getElementById("citySelector").addEventListener("change", function () {
-      const country = document.getElementById("countrySelector").value;
-      const city = this.value;
-      if (citiesData[country] && citiesData[country][city]) {
-        const { lat, lon } = citiesData[country][city];
-        document.getElementById("lat").value = lat;
-        document.getElementById("lon").value = lon;
-        calculate();
-      }
+      const [lat, lon] = this.value.split(",");
+      document.getElementById("lat").value = lat;
+      document.getElementById("lon").value = lon;
+      calculate();
     });
 
     function formatTime(date) {
@@ -153,21 +170,6 @@
     });
     document.getElementById("isha").addEventListener("input", e => {
       document.getElementById("ishaInterval").disabled = parseFloat(e.target.value) > 0;
-    });
-
-    document.getElementById("gpsBtn").addEventListener("click", () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          const { latitude, longitude } = pos.coords;
-          document.getElementById("lat").value = latitude.toFixed(4);
-          document.getElementById("lon").value = longitude.toFixed(4);
-          calculate();
-        }, err => {
-          alert("Erreur GPS : " + err.message);
-        });
-      } else {
-        alert("Géolocalisation non supportée");
-      }
     });
   </script>
 </body>
