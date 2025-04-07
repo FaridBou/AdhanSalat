@@ -1,47 +1,104 @@
+"use strict";
 
-/*!
- * Adhan JavaScript Library (UMD Build, version stable)
- * Source: https://github.com/batoulapps/adhan-js
- */
-(function(global,factory){typeof exports==="object"&&typeof module!=="undefined"?module.exports=factory():typeof define==="function"&&define.amd?define(factory):(global.adhan=factory());})(this,function(){"use strict";
-
-function Coordinates(lat, lon) {
-  this.latitude = lat;
-  this.longitude = lon;
-}
-
-function CalculationParameters(method, fajrAngle, ishaAngle) {
-  this.method = method || 'Other';
-  this.fajrAngle = fajrAngle || 0;
-  this.ishaAngle = ishaAngle || 0;
-  this.ishaInterval = 0;
-  this.adjustments = { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
-}
-
-CalculationParameters.prototype.nightPortions = function() {
-  return { fajr: this.fajrAngle / 60, isha: this.ishaAngle / 60 };
-};
-
-function PrayerTimes(coords, date, params) {
-  const base = new Date(date.setHours(0, 0, 0, 0));
-  const offset = (h, m) => new Date(base.getTime() + ((h * 60 + m) * 60000));
-  return {
-    fajr: offset(5, 0),
-    sunrise: offset(6, 30),
-    dhuhr: offset(13, 15),
-    asr: offset(16, 0),
-    maghrib: offset(19, 45),
-    isha: offset(21, 0)
-  };
-}
-
-return {
-  Coordinates: Coordinates,
-  CalculationParameters: CalculationParameters,
-  CalculationMethod: {
-    Other: function () { return new CalculationParameters("Other", 18, 17); }
-  },
-  PrayerTimes: PrayerTimes
-};
-
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
+Object.defineProperty(exports, "CalculationMethod", {
+  enumerable: true,
+  get: function get() {
+    return _CalculationMethod["default"];
+  }
+});
+Object.defineProperty(exports, "CalculationParameters", {
+  enumerable: true,
+  get: function get() {
+    return _CalculationParameters["default"];
+  }
+});
+Object.defineProperty(exports, "Coordinates", {
+  enumerable: true,
+  get: function get() {
+    return _Coordinates["default"];
+  }
+});
+Object.defineProperty(exports, "HighLatitudeRule", {
+  enumerable: true,
+  get: function get() {
+    return _HighLatitudeRule["default"];
+  }
+});
+Object.defineProperty(exports, "Madhab", {
+  enumerable: true,
+  get: function get() {
+    return _Madhab.Madhab;
+  }
+});
+Object.defineProperty(exports, "PolarCircleResolution", {
+  enumerable: true,
+  get: function get() {
+    return _PolarCircleResolution.PolarCircleResolution;
+  }
+});
+Object.defineProperty(exports, "Prayer", {
+  enumerable: true,
+  get: function get() {
+    return _Prayer["default"];
+  }
+});
+Object.defineProperty(exports, "PrayerTimes", {
+  enumerable: true,
+  get: function get() {
+    return _PrayerTimes["default"];
+  }
+});
+Object.defineProperty(exports, "Qibla", {
+  enumerable: true,
+  get: function get() {
+    return _Qibla["default"];
+  }
+});
+Object.defineProperty(exports, "Rounding", {
+  enumerable: true,
+  get: function get() {
+    return _Rounding.Rounding;
+  }
+});
+Object.defineProperty(exports, "Shafaq", {
+  enumerable: true,
+  get: function get() {
+    return _Shafaq.Shafaq;
+  }
+});
+Object.defineProperty(exports, "SunnahTimes", {
+  enumerable: true,
+  get: function get() {
+    return _SunnahTimes["default"];
+  }
+});
+
+var _CalculationMethod = _interopRequireDefault(require("./CalculationMethod"));
+
+var _CalculationParameters = _interopRequireDefault(require("./CalculationParameters"));
+
+var _Coordinates = _interopRequireDefault(require("./Coordinates"));
+
+var _HighLatitudeRule = _interopRequireDefault(require("./HighLatitudeRule"));
+
+var _Madhab = require("./Madhab");
+
+var _PolarCircleResolution = require("./PolarCircleResolution");
+
+var _Prayer = _interopRequireDefault(require("./Prayer"));
+
+var _PrayerTimes = _interopRequireDefault(require("./PrayerTimes"));
+
+var _Qibla = _interopRequireDefault(require("./Qibla"));
+
+var _Rounding = require("./Rounding");
+
+var _Shafaq = require("./Shafaq");
+
+var _SunnahTimes = _interopRequireDefault(require("./SunnahTimes"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+//# sourceMappingURL=Adhan.js.map
