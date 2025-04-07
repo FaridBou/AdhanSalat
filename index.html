@@ -87,17 +87,46 @@
 <body>
   <header>
     <h1>AdhanSalat</h1>
-    <p>Horaires de prière personnalisables</p>
+    <p>Horaires de prière personnalisables - Mode Offline</p>
   </header>  <div id="error" class="error"></div>
   <div id="times"></div>  <div class="settings">
     <h2>Réglages</h2>
-    <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
-    <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
-    <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
-    <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
-    <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
-    <button onclick="calculateTimesManual()">Mettre à jour</button>
+    <label>Pays :
+      <select id="country" onchange="updateCities()">
+        <option value="France">France</option>
+      </select>
+    </label><label>Ville :
+  <select id="city" onchange="updateCoordinates()">
+    <option value="Nimes">Nîmes</option>
+    <option value="Paris">Paris</option>
+    <option value="Lyon">Lyon</option>
+    <option value="Marseille">Marseille</option>
+  </select>
+</label>
+
+<label>Latitude : <input type="number" id="latitude" step="any" value="43.8367"></label>
+<label>Longitude : <input type="number" id="longitude" step="any" value="4.3601"></label>
+<label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
+<label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
+<label>Décalage Isha après Maghreb (minutes, laisser vide pour utiliser angle) : <input type="number" id="maghribToIsha"></label>
+<button onclick="calculateTimesManual()">Mettre à jour</button>
+
   </div>  <div id="debug" class="debug"></div>  <script src="adhan.js"></script>  <script>
+    const cityData = {
+      Nimes: { lat: 43.8367, lon: 4.3601 },
+      Paris: { lat: 48.8566, lon: 2.3522 },
+      Lyon: { lat: 45.75, lon: 4.85 },
+      Marseille: { lat: 43.2965, lon: 5.3698 }
+    };
+
+    function updateCities() {}
+
+    function updateCoordinates() {
+      const city = document.getElementById("city").value;
+      document.getElementById("latitude").value = cityData[city].lat;
+      document.getElementById("longitude").value = cityData[city].lon;
+    }
+
     function showError(message) {
       document.getElementById('error').textContent = message;
     }
@@ -110,16 +139,27 @@
       try {
         const params = adhan.CalculationMethod.Other();
         params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-        params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-        params.maghribAngle = null;
+        const ishaOffsetInput = document.getElementById('maghribToIsha').value;
+        const useOffset = ishaOffsetInput !== '' && !isNaN(parseInt(ishaOffsetInput));
+
+        if (useOffset) {
+          params.ishaAngle = 0; // annuler le calcul par angle si on utilise un décalage
+        } else {
+          params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
+        }
 
         const date = new Date();
         const location = new adhan.Coordinates(coords.latitude, coords.longitude);
         const prayerTimes = new adhan.PrayerTimes(location, date, params);
 
-        const maghribTime = prayerTimes.maghrib;
-        const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
-        const customIsha = new Date(maghribTime.getTime() + ishaOffset * 60000);
+        let ishaTime;
+        if (useOffset) {
+          const maghribTime = prayerTimes.maghrib;
+          const offsetMinutes = parseInt(ishaOffsetInput);
+          ishaTime = new Date(maghribTime.getTime() + offsetMinutes * 60000);
+        } else {
+          ishaTime = prayerTimes.isha;
+        }
 
         const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 
@@ -128,10 +168,10 @@
           <div class="prayer-time"><strong>Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
           <div class="prayer-time"><strong>Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
           <div class="prayer-time"><strong>Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
-          <div class="prayer-time"><strong>Isha</strong><span>${formatTime(customIsha)}</span></div>
+          <div class="prayer-time"><strong>Isha</strong><span>${formatTime(ishaTime)}</span></div>
         `;
 
-        showDebug(`Position utilisée: latitude ${coords.latitude}, longitude ${coords.longitude}`);
+        showDebug(`Ville : ${document.getElementById("city").value}, Lat : ${coords.latitude}, Lon : ${coords.longitude}`);
       } catch (err) {
         showError("Erreur lors du calcul des horaires.");
         showDebug(err.toString());
@@ -144,20 +184,9 @@
       calculateTimes({ latitude: lat, longitude: lon });
     }
 
-    // Tentative auto au chargement
     window.onload = () => {
-      if (!navigator.geolocation) {
-        showError("Géolocalisation non supportée. Utilisation de la position manuelle.");
-        calculateTimesManual();
-      } else {
-        navigator.geolocation.getCurrentPosition(
-          pos => calculateTimes(pos.coords),
-          err => {
-            showError("Géolocalisation refusée. Utilisation de la position manuelle.");
-            calculateTimesManual();
-          }
-        );
-      }
+      updateCoordinates();
+      calculateTimesManual();
     };
   </script></body>
 </html>
