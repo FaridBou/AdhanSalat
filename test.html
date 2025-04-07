@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8" /><title>Test angles</title></head>
+  <body>
+    <label>Fajr Angle: <input id="fajrAngle" type="number" value="18"></label>
+    <button onclick="calc()">Tester</button>
+    <pre id="result"></pre>
+
+    <script src="adhan.js"></script>
+    <script>
+      function calc() {
+        const fajrAngle = parseFloat(document.getElementById("fajrAngle").value);
+        const coords = new adhan.Coordinates(43.61, 3.87); // Montpellier
+        const params = new adhan.CalculationParameters("Other", fajrAngle, 17);
+        const date = new Date();
+        const pt = new adhan.PrayerTimes(coords, date, params);
+
+        document.getElementById("result").textContent = `
+Fajr: ${pt.fajr.toLocaleTimeString()}
+Sunrise: ${pt.sunrise.toLocaleTimeString()}
+Dhuhr: ${pt.dhuhr.toLocaleTimeString()}
+Asr: ${pt.asr.toLocaleTimeString()}
+Maghrib: ${pt.maghrib.toLocaleTimeString()}
+Isha: ${pt.isha.toLocaleTimeString()}
+`;
+      }
+    </script>
+  </body>
+</html>
