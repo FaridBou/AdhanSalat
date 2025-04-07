@@ -91,6 +91,18 @@
         <option value="ar">العربية</option>
       </select>
     </label>
+    <label>Pays :
+      <select id="countrySelector">
+        <option value="">-- Choisir un pays --</option>
+        <option value="France">France</option>
+      </select>
+    </label>
+    <label>Ville :
+      <select id="citySelector">
+        <option value="">-- Choisir une ville --</option>
+      </select>
+    </label>
+    <button id="gpsBtn">📍 Utiliser ma position</button>
     <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
     <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
     <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
@@ -104,7 +116,44 @@
   <div id="times"></div>
 
   <script src="adhan.js"></script>
+  <script src="cities.json"></script>
   <script>
+    let citiesData = {};
+    fetch('cities.json')
+      .then(res => res.json())
+      .then(data => {
+        citiesData = data;
+        const citySelect = document.getElementById('citySelector');
+        Object.entries(citiesData['France']).forEach(([city, [lat, lon]]) => {
+          const opt = document.createElement('option');
+          opt.value = `${lat},${lon}`;
+          opt.textContent = city;
+          citySelect.appendChild(opt);
+        });
+      });
+
+    document.getElementById('citySelector').addEventListener('change', function () {
+      const [lat, lon] = this.value.split(',');
+      document.getElementById('latitude').value = lat;
+      document.getElementById('longitude').value = lon;
+      calculateTimes({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
+    });
+
+    document.getElementById('gpsBtn').addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          document.getElementById('latitude').value = latitude.toFixed(4);
+          document.getElementById('longitude').value = longitude.toFixed(4);
+          calculateTimes({ latitude, longitude });
+        }, err => {
+          showError("Erreur GPS : " + err.message);
+        });
+      } else {
+        showError("Géolocalisation non supportée");
+      }
+    });
+
     const titleMap = {
       fr: 'AdhanSalat',
       en: 'Prayer Times',
@@ -195,7 +244,6 @@
       calculateTimes({ latitude: lat, longitude: lon });
     }
 
-    // Auto load
     window.onload = () => {
       document.getElementById('themeSelect').addEventListener('change', e => applyTheme(e.target.value));
       document.getElementById('langSelect').addEventListener('change', e => updateLangUI(e.target.value));
