@@ -1,248 +1,304 @@
-[
-  {
-    "country": "France",
-    "city": "Ajaccio",
-    "lat": 41.9192,
-    "lon": 8.7386
-  },
-  {
-    "country": "France",
-    "city": "Amiens",
-    "lat": 49.895,
-    "lon": 2.3023
-  },
-  {
-    "country": "France",
-    "city": "Angers",
-    "lat": 47.4784,
-    "lon": -0.5632
-  },
-  {
-    "country": "France",
-    "city": "Antibes",
-    "lat": 43.5804,
-    "lon": 7.1251
-  },
-  {
-    "country": "France",
-    "city": "Argenteuil",
-    "lat": 48.9472,
-    "lon": 2.2467
-  },
-  {
-    "country": "France",
-    "city": "Asnières-sur-Seine",
-    "lat": 48.9167,
-    "lon": 2.2833
-  },
-  {
-    "country": "France",
-    "city": "Aubervilliers",
-    "lat": 48.9167,
-    "lon": 2.3833
-  },
-  {
-    "country": "France",
-    "city": "Aulnay-sous-Bois",
-    "lat": 48.9381,
-    "lon": 2.4944
-  },
-  {
-    "country": "France",
-    "city": "Avignon",
-    "lat": 43.9493,
-    "lon": 4.8055
-  },
-  {
-    "country": "France",
-    "city": "Besançon",
-    "lat": 47.2379,
-    "lon": 6.0241
-  },
-  {
-    "country": "France",
-    "city": "Bordeaux",
-    "lat": 44.8378,
-    "lon": -0.5792
-  },
-  {
-    "country": "France",
-    "city": "Boulogne-Billancourt",
-    "lat": 48.8397,
-    "lon": 2.2399
-  },
-  {
-    "country": "France",
-    "city": "Brest",
-    "lat": 48.3904,
-    "lon": -4.4861
-  },
-  {
-    "country": "France",
-    "city": "Béziers",
-    "lat": 43.3442,
-    "lon": 3.2158
-  },
-  {
-    "country": "France",
-    "city": "Caen",
-    "lat": 49.1829,
-    "lon": -0.3707
-  },
-  {
-    "country": "France",
-    "city": "Calais",
-    "lat": 50.9513,
-    "lon": 1.8587
-  },
-  {
-    "country": "France",
-    "city": "Cannes",
-    "lat": 43.5528,
-    "lon": 7.0174
-  },
-  {
-    "country": "France",
-    "city": "Chambéry",
-    "lat": 45.5646,
-    "lon": 5.9178
-  },
-  {
-    "country": "France",
-    "city": "Champigny-sur-Marne",
-    "lat": 48.8167,
-    "lon": 2.5167
-  },
-  {
-    "country": "France",
-    "city": "Clermont-Ferrand",
-    "lat": 45.7772,
-    "lon": 3.087
-  },
-  {
-    "country": "France",
-    "city": "Colombes",
-    "lat": 48.9333,
-    "lon": 2.25
-  },
-  {
-    "country": "France",
-    "city": "Dijon",
-    "lat": 47.322,
-    "lon": 5.0415
-  },
-  {
-    "country": "France",
-    "city": "Drancy",
-    "lat": 48.9253,
-    "lon": 2.4456
-  },
-  {
-    "country": "France",
-    "city": "Dunkerque",
-    "lat": 51.0359,
-    "lon": 2.377
-  },
-  {
-    "country": "France",
-    "city": "Grenoble",
-    "lat": 45.1885,
-    "lon": 5.7245
-  },
-  {
-    "country": "France",
-    "city": "Le Havre",
-    "lat": 49.4944,
-    "lon": 0.1079
-  },
-  {
-    "country": "France",
-    "city": "Le Mans",
-    "lat": 48.0061,
-    "lon": 0.1996
-  },
-  {
-    "country": "France",
-    "city": "Lille",
-    "lat": 50.6292,
-    "lon": 3.0573
-  },
-  {
-    "country": "France",
-    "city": "Limoges",
-    "lat": 45.8315,
-    "lon": 1.2578
-  },
-  {
-    "country": "France",
-    "city": "Lorient",
-    "lat": 47.7508,
-    "lon": -3.3666
-  },
-  {
-    "country": "France",
-    "city": "Lyon",
-    "lat": 45.764,
-    "lon": 4.8357
-  },
-  {
-    "country": "France",
-    "city": "Marseille",
-    "lat": 43.2965,
-    "lon": 5.3698
-  },
-  {
-    "country": "France",
-    "city": "Metz",
-    "lat": 49.1193,
-    "lon": 6.1757
-  },
-  {
-    "country": "France",
-    "city": "Montpellier",
-    "lat": 43.6111,
-    "lon": 3.8767
-  },
-  {
-    "country": "France",
-    "city": "Mulhouse",
-    "lat": 47.7508,
-    "lon": 7.3359
-  },
-  {
-    "country": "France",
-    "city": "Nancy",
-    "lat": 48.6921,
-    "lon": 6.1844
-  },
-  {
-    "country": "France",
-    "city": "Nanterre",
-    "lat": 48.8924,
-    "lon": 2.2069
-  },
-  {
-    "country": "France",
-    "city": "Nantes",
-    "lat": 47.2184,
-    "lon": -1.5536
-  },
-  {
-    "country": "France",
-    "city": "Nice",
-    "lat": 43.7102,
-    "lon": 7.262
-  },
-  {
-    "country": "France",
-    "city": "Nîmes",
-    "lat": 43.8367,
-    "lon": 4.3601
-  },
-  {
-    "country": "France",
-    "city": "Orléans",
-    "lat": 47.9025,
-    "lon": 1.909
+{
+  "France": {
+    "Paris": [
+      48.8566,
+      2.3522
+    ],
+    "Marseille": [
+      43.2965,
+      5.3698
+    ],
+    "Lyon": [
+      45.764,
+      4.8357
+    ],
+    "Toulouse": [
+      43.6047,
+      1.4442
+    ],
+    "Nice": [
+      43.7102,
+      7.262
+    ],
+    "Nantes": [
+      47.2184,
+      -1.5536
+    ],
+    "Strasbourg": [
+      48.5734,
+      7.7521
+    ],
+    "Montpellier": [
+      43.6119,
+      3.8777
+    ],
+    "Bordeaux": [
+      44.8378,
+      -0.5792
+    ],
+    "Lille": [
+      50.6292,
+      3.0573
+    ],
+    "Rennes": [
+      48.1173,
+      -1.6778
+    ],
+    "Reims": [
+      49.2583,
+      4.0317
+    ],
+    "Le Havre": [
+      49.4944,
+      0.1079
+    ],
+    "Saint-Étienne": [
+      45.4397,
+      4.3872
+    ],
+    "Toulon": [
+      43.1242,
+      5.928
+    ],
+    "Grenoble": [
+      45.1885,
+      5.7245
+    ],
+    "Dijon": [
+      47.322,
+      5.0415
+    ],
+    "Angers": [
+      47.4784,
+      -0.5632
+    ],
+    "Nîmes": [
+      43.8367,
+      4.3601
+    ],
+    "Villeurbanne": [
+      45.7719,
+      4.8902
+    ],
+    "Clermont-Ferrand": [
+      45.7772,
+      3.087
+    ],
+    "Le Mans": [
+      48.0061,
+      0.1996
+    ],
+    "Aix-en-Provence": [
+      43.5297,
+      5.4474
+    ],
+    "Brest": [
+      48.3904,
+      -4.4861
+    ],
+    "Tours": [
+      47.3941,
+      0.6848
+    ],
+    "Amiens": [
+      49.895,
+      2.3023
+    ],
+    "Limoges": [
+      45.8336,
+      1.2611
+    ],
+    "Annecy": [
+      45.8992,
+      6.1294
+    ],
+    "Perpignan": [
+      42.6886,
+      2.8948
+    ],
+    "Boulogne-Billancourt": [
+      48.8397,
+      2.2399
+    ],
+    "Metz": [
+      49.1193,
+      6.1757
+    ],
+    "Besançon": [
+      47.2378,
+      6.0241
+    ],
+    "Orléans": [
+      47.9029,
+      1.9093
+    ],
+    "Mulhouse": [
+      47.7508,
+      7.3359
+    ],
+    "Rouen": [
+      49.4432,
+      1.0993
+    ],
+    "Caen": [
+      49.1829,
+      -0.3707
+    ],
+    "Nancy": [
+      48.6921,
+      6.1844
+    ],
+    "Saint-Denis": [
+      48.9362,
+      2.3574
+    ],
+    "Argenteuil": [
+      48.9472,
+      2.2467
+    ],
+    "Roubaix": [
+      50.6927,
+      3.1746
+    ],
+    "Tourcoing": [
+      50.723,
+      3.1612
+    ],
+    "Montreuil": [
+      48.8641,
+      2.4435
+    ],
+    "Avignon": [
+      43.9493,
+      4.8055
+    ],
+    "Nanterre": [
+      48.8924,
+      2.206
+    ],
+    "Créteil": [
+      48.7904,
+      2.4556
+    ],
+    "Poitiers": [
+      46.5802,
+      0.3404
+    ],
+    "Versailles": [
+      48.8014,
+      2.1301
+    ],
+    "Courbevoie": [
+      48.8967,
+      2.25
+    ],
+    "Vitry-sur-Seine": [
+      48.7874,
+      2.3929
+    ],
+    "Pau": [
+      43.2951,
+      -0.3708
+    ],
+    "Cannes": [
+      43.5528,
+      7.0174
+    ],
+    "Colombes": [
+      48.9226,
+      2.253
+    ],
+    "La Rochelle": [
+      46.1603,
+      -1.1511
+    ],
+    "Antibes": [
+      43.5804,
+      7.1251
+    ],
+    "Calais": [
+      50.9513,
+      1.8587
+    ],
+    "Ajaccio": [
+      41.9192,
+      8.7386
+    ],
+    "Saint-Nazaire": [
+      47.2806,
+      -2.2089
+    ],
+    "La Seyne-sur-Mer": [
+      43.0999,
+      5.8777
+    ],
+    "Drancy": [
+      48.9257,
+      2.4459
+    ],
+    "Mérignac": [
+      44.8333,
+      -0.6333
+    ],
+    "Issy-les-Moulineaux": [
+      48.823,
+      2.2731
+    ],
+    "Levallois-Perret": [
+      48.8932,
+      2.2883
+    ],
+    "Noisy-le-Grand": [
+      48.8512,
+      2.5487
+    ],
+    "Troyes": [
+      48.2973,
+      4.0744
+    ],
+    "Neuilly-sur-Seine": [
+      48.8846,
+      2.2686
+    ],
+    "Cergy": [
+      49.0366,
+      2.0626
+    ],
+    "Vénissieux": [
+      45.6967,
+      4.8858
+    ],
+    "Les Abymes": [
+      16.273,
+      -61.5043
+    ],
+    "Quimper": [
+      47.9961,
+      -4.0979
+    ],
+    "Valence": [
+      44.9334,
+      4.8924
+    ],
+    "Bayonne": [
+      43.4929,
+      -1.4748
+    ],
+    "Cholet": [
+      47.0601,
+      -0.879
+    ],
+    "La Roche-sur-Yon": [
+      46.6716,
+      -1.426
+    ],
+    "Chambéry": [
+      45.5646,
+      5.9178
+    ],
+    "Niort": [
+      46.3256,
+      -0.4606
+    ]
   }
-]
+}
