@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <title>AdhanSalat</title>
-  <link rel="icon" type="image/png" href="icone.png">
+  <title>Adhan & Salat</title>
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
@@ -86,8 +85,7 @@
 </head>
 <body>
   <header>
-    <img src="icone.png" alt="Logo" style="width:80px; border-radius: 12px;" />
-    <h1 id="title">AdhanSalat</h1>
+    <h1 id="title">Adhan & Salat</h1>
     <p id="subtitle">Horaires de prière personnalisables</p>
   </header>
 
@@ -177,6 +175,7 @@
           }
 
           if (closestCity) {
+            document.getElementById('countrySelector').value = 'France';
             document.getElementById('citySelector').value = closestCity.coords.join(',');
           }
 
@@ -254,6 +253,7 @@
 
         const qiblaAngle = Math.round(adhan.Qibla(location));
 
+        const currentPrayer = prayerTimes.currentPrayer(date);
         const nextPrayer = prayerTimes.nextPrayer(date);
         const nextTime = prayerTimes.timeForPrayer(nextPrayer);
 
@@ -270,7 +270,7 @@
         document.getElementById('times').innerHTML = '';
         prayerNames.forEach(name => {
           const div = document.createElement('div');
-          div.className = 'prayer-time' + (nextPrayer === name ? ' current' : '');
+          div.className = 'prayer-time' + (currentPrayer === name ? ' current' : '');
           div.innerHTML = `<strong>${name.charAt(0).toUpperCase() + name.slice(1)}</strong><span>${format(times[name])}</span>`;
           document.getElementById('times').appendChild(div);
         });
