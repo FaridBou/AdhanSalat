@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -9,11 +8,20 @@
 </head>
 <body>
   <h1>🕌 AdhanSalat - Horaires de prière</h1>
+
   <label>Latitude : <input id="lat" type="number" value="43.61" step="0.01" /></label><br>
   <label>Longitude : <input id="lon" type="number" value="3.87" step="0.01" /></label><br>
   <label>Angle Fajr : <input id="fajr" type="number" value="18" /></label><br>
   <label>Angle Isha : <input id="isha" type="number" value="17" /></label><br>
   <label>OU écart Isha (minutes) : <input id="ishaInterval" type="number" value="0" /></label><br><br>
+
+  <h3>Ajustements manuels (±15min)</h3>
+  <label>Fajr : <select id="fajrAdjust"></select></label><br>
+  <label>Dhuhr : <select id="dhuhrAdjust"></select></label><br>
+  <label>Asr : <select id="asrAdjust"></select></label><br>
+  <label>Maghrib : <select id="maghribAdjust"></select></label><br>
+  <label>Isha : <select id="ishaAdjust"></select></label><br><br>
+
   <button onclick="calculate()">Calculer</button>
 
   <h2>Horaires :</h2>
@@ -23,6 +31,18 @@
   <script>
     function formatTime(date) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function generateAdjustmentOptions(id) {
+      const select = document.getElementById(id);
+      select.innerHTML = "";
+      for (let i = -15; i <= 15; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = (i > 0 ? "+" : "") + i + " min";
+        if (i === 0) opt.selected = true;
+        select.appendChild(opt);
+      }
     }
 
     function calculate() {
@@ -40,6 +60,13 @@
         params.ishaAngle = 0;
         params.ishaInterval = ishaInterval;
       }
+
+      // Appliquer les ajustements
+      params.adjustments.fajr = parseInt(document.getElementById("fajrAdjust").value);
+      params.adjustments.dhuhr = parseInt(document.getElementById("dhuhrAdjust").value);
+      params.adjustments.asr = parseInt(document.getElementById("asrAdjust").value);
+      params.adjustments.maghrib = parseInt(document.getElementById("maghribAdjust").value);
+      params.adjustments.isha = parseInt(document.getElementById("ishaAdjust").value);
 
       const date = new Date();
       const prayerTimes = new adhan.PrayerTimes(coordinates, date, params);
@@ -62,7 +89,19 @@
       }
     }
 
-    window.onload = calculate;
+    // Init des options d’ajustement au chargement
+    window.onload = () => {
+      ["fajrAdjust", "dhuhrAdjust", "asrAdjust", "maghribAdjust", "ishaAdjust"].forEach(generateAdjustmentOptions);
+      calculate();
+    };
+
+    // Exclusivité angle / intervalle Isha
+    document.getElementById("ishaInterval").addEventListener("input", e => {
+      document.getElementById("isha").disabled = parseInt(e.target.value) > 0;
+    });
+    document.getElementById("isha").addEventListener("input", e => {
+      document.getElementById("ishaInterval").disabled = parseFloat(e.target.value) > 0;
+    });
   </script>
 </body>
 </html>
