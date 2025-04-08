@@ -1,134 +1,184 @@
-// Données de villes françaises (format : nom → [lat, lon])
-let citiesData = {};
-fetch("cities.json").then(res => res.json()).then(data => {
-  citiesData = data;
-  const citySelect = document.getElementById("citySelector");
-  Object.entries(data).sort().forEach(([city, coords]) => {
-    const opt = document.createElement("option");
-    opt.value = coords.join(",");
-    opt.textContent = city;
-    citySelect.appendChild(opt);
-  });
-});
 
-// Appliquer le thème choisi
-function applyTheme(mode) {
-  const html = document.documentElement;
-  const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.body.classList.toggle('dark', dark);
+let citiesData = {};
+let currentTheme = "auto";
+let currentLang = "fr";
+
+function loadCities() {
+  fetch("cities.json")
+    .then(res => res.json())
+    .then(data => {
+      citiesData = data;
+      const countrySelector = document.getElementById("countrySelector");
+      const citySelector = document.getElementById("citySelector");
+      countrySelector.innerHTML = '<option value="">-- Choisir un pays --</option>';
+
+      Object.keys(citiesData).sort().forEach(country => {
+        const opt = document.createElement("option");
+        opt.value = country;
+        opt.textContent = country;
+        countrySelector.appendChild(opt);
+      });
+
+      countrySelector.addEventListener("change", () => {
+        const selectedCountry = countrySelector.value;
+        citySelector.innerHTML = '<option value="">-- Choisir une ville --</option>';
+        if (citiesData[selectedCountry]) {
+          Object.keys(citiesData[selectedCountry]).sort().forEach(city => {
+            const opt = document.createElement("option");
+            opt.value = city;
+            opt.textContent = city;
+            citySelector.appendChild(opt);
+          });
+        }
+      });
+
+      citySelector.addEventListener("change", () => {
+        const selectedCountry = countrySelector.value;
+        const selectedCity = citySelector.value;
+        if (citiesData[selectedCountry] && citiesData[selectedCountry][selectedCity]) {
+          const [lat, lon] = citiesData[selectedCountry][selectedCity];
+          document.getElementById("latitude").value = lat;
+          document.getElementById("longitude").value = lon;
+          document.getElementById("cityDisplay").textContent = selectedCity;
+          calculateTimesManual();
+        }
+      });
+    });
 }
 
-// Gérer la sélection de thème
-const themeSelect = document.getElementById("themeSelect");
-themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
-applyTheme(themeSelect.value);
+function distance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-// Icônes pour les prières
-const prayerIcons = {
-  fajr: "🕋",
-  dhuhr: "🕛",
-  asr: "🕒",
-  maghrib: "🌇",
-  isha: "🌃"
-};
+function detectLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
+    document.getElementById("latitude").value = latitude.toFixed(4);
+    document.getElementById("longitude").value = longitude.toFixed(4);
+    let closest = { country: "", city: "", dist: Infinity };
+    for (const country in citiesData) {
+      for (const city in citiesData[country]) {
+        const [clat, clon] = citiesData[country][city];
+        const d = distance(latitude, longitude, clat, clon);
+        if (d < closest.dist) {
+          closest = { country, city, dist: d };
+        }
+      }
+    }
+    if (closest.city) {
+      document.getElementById("countrySelector").value = closest.country;
+      const evt = new Event("change");
+      document.getElementById("countrySelector").dispatchEvent(evt);
+      setTimeout(() => {
+        document.getElementById("citySelector").value = closest.city;
+        document.getElementById("citySelector").dispatchEvent(new Event("change"));
+      }, 200);
+    }
+  }, err => {
+    alert("Erreur GPS : " + err.message);
+  });
+}
 
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function calculateTimes(coords) {
-  const params = adhan.CalculationMethod.Other();
-  params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-  params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-  params.maghribAngle = null;
+function calculateTimesManual() {
+  const lat = parseFloat(document.getElementById("latitude").value);
+  const lon = parseFloat(document.getElementById("longitude").value);
+  calculateTimes({ latitude: lat, longitude: lon });
+}
 
-  const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
-  if (ishaOffset > 0) {
-    params.ishaAngle = 0;
-    params.ishaInterval = ishaOffset;
-    document.getElementById("angleIsha").disabled = true;
-  } else {
-    document.getElementById("angleIsha").disabled = false;
-  }
+function calculateTimes(coords) {
+  const angleFajr = parseFloat(document.getElementById("angleFajr").value);
+  const angleIsha = parseFloat(document.getElementById("angleIsha").value);
+  const ishaInterval = parseFloat(document.getElementById("maghribToIsha").value);
+  const params = adhan.CalculationMethod.Other();
+  params.fajrAngle = angleFajr;
+  params.ishaAngle = ishaInterval > 0 ? 0 : angleIsha;
+  params.ishaInterval = ishaInterval > 0 ? ishaInterval : 0;
 
   const date = new Date();
   const location = new adhan.Coordinates(coords.latitude, coords.longitude);
   const prayerTimes = new adhan.PrayerTimes(location, date, params);
 
   const maghribTime = prayerTimes.maghrib;
-  const customIsha = ishaOffset > 0 ? new Date(maghribTime.getTime() + ishaOffset * 60000) : prayerTimes.isha;
-
-  const now = new Date();
-  let current = prayerTimes.currentPrayer(now);
-  let next = prayerTimes.nextPrayer(now);
-
-  if (next === "none") {
-    const tomorrow = new Date(date);
-    tomorrow.setDate(date.getDate() + 1);
-    const ptNext = new adhan.PrayerTimes(location, tomorrow, params);
-    next = "fajr";
-    prayerTimes[next] = ptNext.fajr;
-  }
+  const customIsha = ishaInterval > 0 ? new Date(maghribTime.getTime() + ishaInterval * 60000) : prayerTimes.isha;
 
   const timesDiv = document.getElementById("times");
-  timesDiv.innerHTML = "";
-  const cityText = document.getElementById("citySelector").selectedOptions[0]?.textContent;
-  document.getElementById("cityDisplay").textContent = cityText || "";
+  const prayers = {
+    Fajr: prayerTimes.fajr,
+    Dhuhr: prayerTimes.dhuhr,
+    Asr: prayerTimes.asr,
+    Maghrib: prayerTimes.maghrib,
+    Isha: customIsha
+  };
 
-  ["fajr", "dhuhr", "asr", "maghrib", "isha"].forEach(prayer => {
-    const time = formatTime(prayer === "isha" ? customIsha : prayerTimes[prayer]);
+  let current = "Isha", next = "Fajr", now = new Date();
+  const keys = Object.keys(prayers);
+  for (let i = 0; i < keys.length; i++) {
+    if (now < prayers[keys[i]]) {
+      current = keys[i - 1] || "Isha";
+      next = keys[i];
+      break;
+    }
+  }
+
+  timesDiv.innerHTML = "";
+  keys.forEach(prayer => {
     const div = document.createElement("div");
-    div.className = "prayer-time" + (current === prayer ? " current" : "");
-    div.innerHTML = `<strong>${prayerIcons[prayer]} ${prayer.charAt(0).toUpperCase() + prayer.slice(1)}</strong><span>${time}</span>`;
+    div.className = "prayer-time";
+    if (prayer === current) div.classList.add("active");
+    const icon = prayer === "Fajr" ? "🕋" : prayer === "Dhuhr" ? "🕛" : prayer === "Asr" ? "🕒" : prayer === "Maghrib" ? "🌇" : "🌙";
+    div.innerHTML = `<strong>${icon} ${prayer}</strong><span>${formatTime(prayers[prayer])}</span>`;
     timesDiv.appendChild(div);
   });
 
-  updateCountdown(prayerTimes[next], next);
+  document.getElementById("cityDisplay").textContent = document.getElementById("citySelector").value;
+  startCountdown(prayers[next], next);
 }
 
-function updateCountdown(nextTime, label) {
-  const countdown = document.getElementById("countdown");
-  const now = new Date();
-  const diff = Math.max(0, Math.floor((nextTime - now) / 1000));
-  const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
-  const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-  const seconds = (diff % 60).toString().padStart(2, '0');
-  countdown.textContent = `⏳ Prochaine prière (${label}) dans : ${hours}:${minutes}:${seconds}`;
-  setTimeout(() => updateCountdown(nextTime, label), 1000);
+function startCountdown(nextTime, nextLabel) {
+  const countdownDiv = document.getElementById("countdown");
+  const update = () => {
+    const now = new Date();
+    const diff = nextTime - now;
+    if (diff <= 0) return countdownDiv.textContent = "🔄 Mise à jour...";
+    const h = String(Math.floor(diff / 3600000)).padStart(2, "0");
+    const m = String(Math.floor(diff % 3600000 / 60000)).padStart(2, "0");
+    const s = String(Math.floor(diff % 60000 / 1000)).padStart(2, "0");
+    countdownDiv.textContent = `⏳ ${h}:${m}:${s} avant ${nextLabel}`;
+  };
+  update();
+  setInterval(update, 1000);
 }
 
-function calculateTimesManual() {
-  const lat = parseFloat(document.getElementById('latitude').value);
-  const lon = parseFloat(document.getElementById('longitude').value);
-  calculateTimes({ latitude: lat, longitude: lon });
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
-document.getElementById("gpsBtn").addEventListener("click", () => {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude, longitude } = pos.coords;
-      document.getElementById("latitude").value = latitude.toFixed(4);
-      document.getElementById("longitude").value = longitude.toFixed(4);
-      calculateTimes({ latitude, longitude });
+function changeTheme() {
+  const selected = document.getElementById("themeSelect").value;
+  applyTheme(selected === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : selected);
+}
 
-      // Trouver la ville la plus proche
-      let closest = null;
-      let minDist = Infinity;
-      for (const [city, [clat, clon]] of Object.entries(citiesData)) {
-        const dist = Math.hypot(latitude - clat, longitude - clon);
-        if (dist < minDist) {
-          closest = city;
-          minDist = dist;
-        }
-      }
-      if (closest) {
-        const coords = citiesData[closest];
-        document.getElementById("citySelector").value = coords.join(",");
-        document.getElementById("cityDisplay").textContent = closest;
-        document.getElementById("countrySelector").value = "France";
-      }
-    }, err => alert("Erreur GPS : " + err.message));
-  } else {
-    alert("Géolocalisation non supportée");
-  }
-});
+function changeLang() {
+  const selected = document.getElementById("langSelect").value;
+  currentLang = selected;
+  // Ajoute ici la logique multilingue si nécessaire
+}
+
+window.onload = () => {
+  loadCities();
+  detectLocation();
+  document.getElementById("themeSelect").addEventListener("change", changeTheme);
+  document.getElementById("langSelect").addEventListener("change", changeLang);
+  changeTheme();
+  changeLang();
+};
