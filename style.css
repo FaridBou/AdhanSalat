@@ -1,0 +1,144 @@
+:root {
+  --bg: #f9f9f9;
+  --text: #111;
+  --card-bg: #fff;
+  --highlight: #dff0d8;
+  --primary: #1e88e5;
+}
+
+[data-theme='dark'] {
+  --bg: #121212;
+  --text: #eee;
+  --card-bg: #1e1e1e;
+  --highlight: #2e7d32;
+  --primary: #90caf9;
+}
+
+body {
+  margin: 0;
+  padding: 1em;
+  font-family: system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+header img {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0.5em;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8em;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.settings {
+  flex: 1 1 300px;
+  background-color: var(--card-bg);
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings h2 {
+  text-align: center;
+  margin-top: 0;
+}
+
+.settings label {
+  display: block;
+  margin-bottom: 0.8em;
+}
+
+.settings input,
+.settings select {
+  width: 100%;
+  padding: 0.4em;
+  margin-top: 0.2em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.update-button {
+  display: block;
+  width: 100%;
+  padding: 0.6em;
+  background: var(--primary);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  margin-top: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.update-button:hover {
+  background: #1565c0;
+}
+
+#error {
+  color: red;
+  text-align: center;
+}
+
+#countdown {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  font-size: 1.1em;
+}
+
+#cityDisplay {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+#times {
+  flex: 2 1 350px;
+  padding: 1em;
+  border-radius: 8px;
+  background: var(--card-bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.prayer-time {
+  display: flex;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border-bottom: 1px solid #ddd;
+  padding: 0.6em;
+  border-radius: 6px;
+  margin-bottom: 0.4em;
+}
+
+.prayer-time.active {
+  background-color: var(--highlight);
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .settings,
+  #times {
+    width: 100%;
+  }
+}
