@@ -1,36 +1,48 @@
 
 let citiesData = {};
-let currentTheme = "auto";
-let currentLang = "fr";
 
-function loadCities() {
-  fetch("cities.json")
-    .then(res => res.json())
-    .then(data => {
-      citiesData = data;
-      const countrySelector = document.getElementById("countrySelector");
-      const citySelector = document.getElementById("citySelector");
-      countrySelector.innerHTML = '<option value="">-- Choisir un pays --</option>';
+fetch("cities.json")
+  .then(res => res.json())
+  .then(data => {
+    citiesData = data;
+    const countrySelect = document.getElementById("countrySelector");
+    for (const country in data) {
+      const opt = document.createElement("option");
+      opt.value = country;
+      opt.textContent = country;
+      countrySelect.appendChild(opt);
+    }
+  });
 
-      Object.keys(citiesData).sort().forEach(country => {
-        const opt = document.createElement("option");
-        opt.value = country;
-        opt.textContent = country;
-        countrySelector.appendChild(opt);
-      });
+document.getElementById("countrySelector").addEventListener("change", function () {
+  const country = this.value;
+  populateCities(country);
+});
 
-      countrySelector.addEventListener("change", () => {
-        const selectedCountry = countrySelector.value;
-        citySelector.innerHTML = '<option value="">-- Choisir une ville --</option>';
-        if (citiesData[selectedCountry]) {
-          Object.keys(citiesData[selectedCountry]).sort().forEach(city => {
-            const opt = document.createElement("option");
-            opt.value = city;
-            opt.textContent = city;
-            citySelector.appendChild(opt);
-          });
-        }
-      });
+function populateCities(country) {
+  const citySelect = document.getElementById("citySelector");
+  citySelect.innerHTML = '<option value="">-- Choisir une ville --</option>';
+  if (citiesData[country]) {
+    const sortedCities = Object.keys(citiesData[country]).sort();
+    for (const city of sortedCities) {
+      const opt = document.createElement("option");
+      opt.value = city;
+      opt.textContent = city;
+      citySelect.appendChild(opt);
+    }
+  }
+}
+
+document.getElementById("citySelector").addEventListener("change", function () {
+  const city = this.value;
+  const country = document.getElementById("countrySelector").value;
+  if (citiesData[country] && citiesData[country][city]) {
+    const [lat, lon] = citiesData[country][city];
+    document.getElementById("latitude").value = lat;
+    document.getElementById("longitude").value = lon;
+    calculateTimes({ latitude: lat, longitude: lon });
+  }
+});
 
 document.getElementById("gpsBtn").addEventListener("click", () => {
   if (navigator.geolocation) {
@@ -40,10 +52,9 @@ document.getElementById("gpsBtn").addEventListener("click", () => {
         document.getElementById("latitude").value = latitude.toFixed(4);
         document.getElementById("longitude").value = longitude.toFixed(4);
 
-        // Trouver la ville + pays correspondant à la position
         let closestCity = null;
+        let closestCountry = null;
         let minDist = Infinity;
-        let closestCountry = '';
 
         for (const country in citiesData) {
           for (const city in citiesData[country]) {
@@ -57,85 +68,77 @@ document.getElementById("gpsBtn").addEventListener("click", () => {
           }
         }
 
-        // Préremplir les sélecteurs
-        if (closestCity) {
+        if (closestCity && closestCountry) {
           document.getElementById("countrySelector").value = closestCountry;
-          populateCities(closestCountry); // recharge les villes de ce pays
+          populateCities(closestCountry);
+
           setTimeout(() => {
             document.getElementById("citySelector").value = closestCity;
             document.getElementById("citySelector").dispatchEvent(new Event("change"));
-          }, 100); // délai pour laisser le DOM charger les options
-                }
-        
-                calculateTimes({ latitude, longitude });
-              },
-              err => {
-                showError("Erreur GPS : " + err.message);
-                calculateTimesManual();
-              }
-            );
-          } else {
-            showError("Géolocalisation non supportée.");
-            calculateTimesManual();
-          }
-        });
-
-      
-      citySelector.addEventListener("change", () => {
-        const selectedCountry = countrySelector.value;
-        const selectedCity = citySelector.value;
-        if (citiesData[selectedCountry] && citiesData[selectedCountry][selectedCity]) {
-          const [lat, lon] = citiesData[selectedCountry][selectedCity];
-          document.getElementById("latitude").value = lat;
-          document.getElementById("longitude").value = lon;
-          document.getElementById("cityDisplay").textContent = selectedCity;
-          calculateTimesManual();
+          }, 100);
         }
-      });
-    });
-}
+
+        calculateTimes({ latitude, longitude });
+      },
+      err => {
+        showError("Erreur GPS : " + err.message);
+        calculateTimesManual();
+      }
+    );
+  } else {
+    showError("Géolocalisation non supportée");
+    calculateTimesManual();
+  }
+});
 
 function distance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const toRad = x => x * Math.PI / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-function detectLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    document.getElementById("latitude").value = latitude.toFixed(4);
-    document.getElementById("longitude").value = longitude.toFixed(4);
-    let closest = { country: "", city: "", dist: Infinity };
-    for (const country in citiesData) {
-      for (const city in citiesData[country]) {
-        const [clat, clon] = citiesData[country][city];
-        const d = distance(latitude, longitude, clat, clon);
-        if (d < closest.dist) {
-          closest = { country, city, dist: d };
-        }
-      }
-    }
-    if (closest.city) {
-      document.getElementById("countrySelector").value = closest.country;
-      const evt = new Event("change");
-      document.getElementById("countrySelector").dispatchEvent(evt);
-      setTimeout(() => {
-        document.getElementById("citySelector").value = closest.city;
-        document.getElementById("citySelector").dispatchEvent(new Event("change"));
-      }, 200);
-    }
-  }, err => {
-    alert("Erreur GPS : " + err.message);
-  });
-}
+function calculateTimes(coords) {
+  try {
+    const params = adhan.CalculationMethod.Other();
+    params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
+    const ishaInterval = parseInt(document.getElementById("maghribToIsha").value);
+    const ishaAngle = parseFloat(document.getElementById('angleIsha').value);
 
-function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (ishaInterval > 0) {
+      params.ishaInterval = ishaInterval;
+      params.ishaAngle = 0;
+    } else {
+      params.ishaAngle = ishaAngle;
+    }
+
+    const date = new Date();
+    const location = new adhan.Coordinates(coords.latitude, coords.longitude);
+    const prayerTimes = new adhan.PrayerTimes(location, date, params);
+
+    const maghribTime = prayerTimes.maghrib;
+    const customIsha = ishaInterval > 0
+      ? new Date(maghribTime.getTime() + ishaInterval * 60000)
+      : prayerTimes.isha;
+
+    const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+    document.getElementById("times").innerHTML = `
+      <div class="prayer-time"><strong>🕋 Fajr</strong><span>${formatTime(prayerTimes.fajr)}</span></div>
+      <div class="prayer-time"><strong>🕛 Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
+      <div class="prayer-time"><strong>🕒 Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
+      <div class="prayer-time"><strong>🌇 Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
+      <div class="prayer-time"><strong>🌙 Isha</strong><span>${formatTime(customIsha)}</span></div>
+    `;
+
+    const city = document.getElementById("citySelector").value;
+    const country = document.getElementById("countrySelector").value;
+    document.getElementById("cityDisplay").textContent = city && country ? `${city}, ${country}` : "";
+  } catch (err) {
+    showError("Erreur lors du calcul des horaires.");
+  }
 }
 
 function calculateTimesManual() {
@@ -144,90 +147,6 @@ function calculateTimesManual() {
   calculateTimes({ latitude: lat, longitude: lon });
 }
 
-function calculateTimes(coords) {
-  const angleFajr = parseFloat(document.getElementById("angleFajr").value);
-  const angleIsha = parseFloat(document.getElementById("angleIsha").value);
-  const ishaInterval = parseFloat(document.getElementById("maghribToIsha").value);
-  const params = adhan.CalculationMethod.Other();
-  params.fajrAngle = angleFajr;
-  params.ishaAngle = ishaInterval > 0 ? 0 : angleIsha;
-  params.ishaInterval = ishaInterval > 0 ? ishaInterval : 0;
-
-  const date = new Date();
-  const location = new adhan.Coordinates(coords.latitude, coords.longitude);
-  const prayerTimes = new adhan.PrayerTimes(location, date, params);
-
-  const maghribTime = prayerTimes.maghrib;
-  const customIsha = ishaInterval > 0 ? new Date(maghribTime.getTime() + ishaInterval * 60000) : prayerTimes.isha;
-
-  const timesDiv = document.getElementById("times");
-  const prayers = {
-    Fajr: prayerTimes.fajr,
-    Dhuhr: prayerTimes.dhuhr,
-    Asr: prayerTimes.asr,
-    Maghrib: prayerTimes.maghrib,
-    Isha: customIsha
-  };
-
-  let current = "Isha", next = "Fajr", now = new Date();
-  const keys = Object.keys(prayers);
-  for (let i = 0; i < keys.length; i++) {
-    if (now < prayers[keys[i]]) {
-      current = keys[i - 1] || "Isha";
-      next = keys[i];
-      break;
-    }
-  }
-
-  timesDiv.innerHTML = "";
-  keys.forEach(prayer => {
-    const div = document.createElement("div");
-    div.className = "prayer-time";
-    if (prayer === current) div.classList.add("active");
-    const icon = prayer === "Fajr" ? "🕋" : prayer === "Dhuhr" ? "🕛" : prayer === "Asr" ? "🕒" : prayer === "Maghrib" ? "🌇" : "🌙";
-    div.innerHTML = `<strong>${icon} ${prayer}</strong><span>${formatTime(prayers[prayer])}</span>`;
-    timesDiv.appendChild(div);
-  });
-
-  document.getElementById("cityDisplay").textContent = document.getElementById("citySelector").value;
-  startCountdown(prayers[next], next);
+function showError(msg) {
+  document.getElementById("error").textContent = msg;
 }
-
-function startCountdown(nextTime, nextLabel) {
-  const countdownDiv = document.getElementById("countdown");
-  const update = () => {
-    const now = new Date();
-    const diff = nextTime - now;
-    if (diff <= 0) return countdownDiv.textContent = "🔄 Mise à jour...";
-    const h = String(Math.floor(diff / 3600000)).padStart(2, "0");
-    const m = String(Math.floor(diff % 3600000 / 60000)).padStart(2, "0");
-    const s = String(Math.floor(diff % 60000 / 1000)).padStart(2, "0");
-    countdownDiv.textContent = `⏳ ${h}:${m}:${s} avant ${nextLabel}`;
-  };
-  update();
-  setInterval(update, 1000);
-}
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-}
-
-function changeTheme() {
-  const selected = document.getElementById("themeSelect").value;
-  applyTheme(selected === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : selected);
-}
-
-function changeLang() {
-  const selected = document.getElementById("langSelect").value;
-  currentLang = selected;
-  // Ajoute ici la logique multilingue si nécessaire
-}
-
-window.onload = () => {
-  loadCities();
-  detectLocation();
-  document.getElementById("themeSelect").addEventListener("change", changeTheme);
-  document.getElementById("langSelect").addEventListener("change", changeLang);
-  changeTheme();
-  changeLang();
-};
