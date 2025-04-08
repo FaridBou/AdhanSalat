@@ -32,6 +32,55 @@ function loadCities() {
         }
       });
 
+document.getElementById("gpsBtn").addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords;
+        document.getElementById("latitude").value = latitude.toFixed(4);
+        document.getElementById("longitude").value = longitude.toFixed(4);
+
+        // Trouver la ville + pays correspondant à la position
+        let closestCity = null;
+        let minDist = Infinity;
+        let closestCountry = '';
+
+        for (const country in citiesData) {
+          for (const city in citiesData[country]) {
+            const [clat, clon] = citiesData[country][city];
+            const dist = distance(latitude, longitude, clat, clon);
+            if (dist < minDist) {
+              minDist = dist;
+              closestCity = city;
+              closestCountry = country;
+            }
+          }
+        }
+
+        // Préremplir les sélecteurs
+        if (closestCity) {
+          document.getElementById("countrySelector").value = closestCountry;
+          populateCities(closestCountry); // recharge les villes de ce pays
+          setTimeout(() => {
+            document.getElementById("citySelector").value = closestCity;
+            document.getElementById("citySelector").dispatchEvent(new Event("change"));
+          }, 100); // délai pour laisser le DOM charger les options
+                }
+        
+                calculateTimes({ latitude, longitude });
+              },
+              err => {
+                showError("Erreur GPS : " + err.message);
+                calculateTimesManual();
+              }
+            );
+          } else {
+            showError("Géolocalisation non supportée.");
+            calculateTimesManual();
+          }
+        });
+
+      
       citySelector.addEventListener("change", () => {
         const selectedCountry = countrySelector.value;
         const selectedCity = citySelector.value;
