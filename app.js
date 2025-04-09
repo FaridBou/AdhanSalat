@@ -1,4 +1,3 @@
-
 let citiesData = {};
 let currentCity = "";
 let currentCountry = "";
@@ -106,18 +105,18 @@ document.getElementById("angleIsha").addEventListener("input", e => {
 
 function calculateNextPrayer(now, times) {
   const ordered = [
-    { name: "Fajr", time: times.fajr },
-    { name: "Dhuhr", time: times.dhuhr },
-    { name: "Asr", time: times.asr },
-    { name: "Maghrib", time: times.maghrib },
-    { name: "Isha", time: times.isha }
+    { name: "fajr", time: times.fajr },
+    { name: "dhuhr", time: times.dhuhr },
+    { name: "asr", time: times.asr },
+    { name: "maghrib", time: times.maghrib },
+    { name: "isha", time: times.isha }
   ];
   for (let i = 0; i < ordered.length; i++) {
     if (now < ordered[i].time) {
       return { next: ordered[i], after: ordered[(i + 1) % ordered.length] };
     }
   }
-  return { next: ordered[0], after: ordered[1] }; // After Isha
+  return { next: ordered[0], after: ordered[1] }; // Après Isha
 }
 
 function updateTimes() {
@@ -141,26 +140,30 @@ function updateTimes() {
   const prayerTimes = new adhan.PrayerTimes(coords, date, params);
 
   const times = {
-    Fajr: prayerTimes.fajr,
-    Dhuhr: prayerTimes.dhuhr,
-    Asr: prayerTimes.asr,
-    Maghrib: prayerTimes.maghrib,
-    Isha: ishaOffset > 0 ? new Date(prayerTimes.maghrib.getTime() + ishaOffset * 60000) : prayerTimes.isha
+    fajr: prayerTimes.fajr,
+    dhuhr: prayerTimes.dhuhr,
+    asr: prayerTimes.asr,
+    maghrib: prayerTimes.maghrib,
+    isha: ishaOffset > 0
+      ? new Date(prayerTimes.maghrib.getTime() + ishaOffset * 60000)
+      : prayerTimes.isha
   };
 
   const icons = {
-    Fajr: "🕋", Dhuhr: "🕛", Asr: "🕒", Maghrib: "🌇", Isha: "🌃"
+    fajr: "🕋", dhuhr: "🕛", asr: "🕒", maghrib: "🌇", isha: "🌃"
   };
 
   const now = new Date();
   const { next } = calculateNextPrayer(now, times);
+
+  console.log("Prochaine prière :", next.name, "à", next.time);
 
   document.getElementById("cityDisplay").textContent = currentCity || "";
 
   const list = Object.entries(times).map(([name, time]) => {
     const timeStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const isNext = name === next.name;
-    return `<div class="prayer-time ${isNext ? "current" : ""}"><strong>${icons[name]} ${name}</strong><span>${timeStr}</span></div>`;
+    return `<div class="prayer-time ${isNext ? "current" : ""}"><strong>${icons[name]} ${name.charAt(0).toUpperCase() + name.slice(1)}</strong><span>${timeStr}</span></div>`;
   }).join("");
 
   document.getElementById("times").innerHTML = list;
@@ -172,7 +175,7 @@ function updateTimes() {
     const diff = Math.max(0, next.time - now);
     const mins = Math.floor(diff / 60000);
     const secs = Math.floor((diff % 60000) / 1000);
-    countdownEl.innerHTML = `⏳ Prochaine prière (${next.name}) dans ${mins}m ${secs}s`;
+    countdownEl.innerHTML = `⏳ Prochaine prière (${next.name.charAt(0).toUpperCase() + next.name.slice(1)}) dans ${mins}m ${secs}s`;
   };
   updateCountdown();
   clearInterval(window.countdownInterval);
