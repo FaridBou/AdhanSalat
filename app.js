@@ -96,12 +96,25 @@ function distance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-document.getElementById("maghribToIsha").addEventListener("input", e => {
-  document.getElementById("angleIsha").disabled = parseInt(e.target.value) > 0;
-});
-document.getElementById("angleIsha").addEventListener("input", e => {
-  document.getElementById("maghribToIsha").disabled = parseFloat(e.target.value) > 0;
-});
+function updateIshaControls() {
+  const angle = parseFloat(document.getElementById("angleIsha").value);
+  const offset = parseInt(document.getElementById("maghribToIsha").value);
+
+  if (offset > 0) {
+    document.getElementById("angleIsha").disabled = true;
+    document.getElementById("maghribToIsha").disabled = false;
+  } else if (angle > 0) {
+    document.getElementById("angleIsha").disabled = false;
+    document.getElementById("maghribToIsha").disabled = true;
+  } else {
+    // aucun renseigné, tout actif
+    document.getElementById("angleIsha").disabled = false;
+    document.getElementById("maghribToIsha").disabled = false;
+  }
+}
+
+document.getElementById("maghribToIsha").addEventListener("input", updateIshaControls);
+document.getElementById("angleIsha").addEventListener("input", updateIshaControls);
 
 function calculateNextPrayer(now, times) {
   const ordered = [
@@ -183,4 +196,7 @@ function updateTimes() {
 }
 
 window.calculateTimesManual = updateTimes;
-window.onload = loadCities;
+window.onload = () => {
+  loadCities();
+  updateIshaControls();
+};
