@@ -56,34 +56,7 @@ document.getElementById("gpsBtn").addEventListener("click", () => {
     document.getElementById("latitude").value = lat;
     document.getElementById("longitude").value = lon;
 
-    // Trouver la ville la plus proche
-    let closest = null;
-    let minDist = Infinity;
-    for (const [country, cities] of Object.entries(citiesData)) {
-      for (const [city, [clat, clon]] of Object.entries(cities)) {
-        const d = distance(lat, lon, clat, clon);
-        if (d < minDist) {
-          minDist = d;
-          closest = { country, city, lat: clat, lon: clon };
-        }
-      }
-    }
-    if (closest) {
-      currentCountry = closest.country;
-      currentCity = closest.city;
-      document.getElementById("countrySelector").value = closest.country;
-      document.getElementById("citySelector").innerHTML = "";
-      Object.entries(citiesData[closest.country])
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .forEach(([city, [lat, lon]]) => {
-          const option = document.createElement("option");
-          option.value = [lat, lon].join(",");
-          option.textContent = city;
-          if (city === closest.city) option.selected = true;
-          document.getElementById("citySelector").appendChild(option);
-        });
-      updateTimes();
-    }
+    setClosestCity(lat, lon);
   });
 });
 
@@ -94,6 +67,39 @@ function distance(lat1, lon1, lat2, lon2) {
   const dLon = toRad(lon2 - lon1);
   const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function setClosestCity(lat, lon) {
+  let closest = null;
+  let minDist = Infinity;
+  for (const [country, cities] of Object.entries(citiesData)) {
+    for (const [city, [clat, clon]] of Object.entries(cities)) {
+      const d = distance(lat, lon, clat, clon);
+      if (d < minDist) {
+        minDist = d;
+        closest = { country, city, lat: clat, lon: clon };
+      }
+    }
+  }
+
+  if (closest) {
+    currentCountry = closest.country;
+    currentCity = closest.city;
+    document.getElementById("countrySelector").value = closest.country;
+
+    const citySelect = document.getElementById("citySelector");
+    citySelect.innerHTML = "";
+
+    Object.entries(citiesData[closest.country])
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .forEach(([city, [clat, clon]]) => {
+        const option = document.createElement("option");
+        option.value = [clat, clon].join(",");
+        option.textContent = city;
+        if (city === closest.city) option.selected = true;
+        citySelect.appendChild(option);
+      });
+  }
 }
 
 function updateIshaControls() {
@@ -107,7 +113,6 @@ function updateIshaControls() {
     document.getElementById("angleIsha").disabled = false;
     document.getElementById("maghribToIsha").disabled = true;
   } else {
-    // aucun renseigné, tout actif
     document.getElementById("angleIsha").disabled = false;
     document.getElementById("maghribToIsha").disabled = false;
   }
@@ -129,7 +134,7 @@ function calculateNextPrayer(now, times) {
       return { next: ordered[i], after: ordered[(i + 1) % ordered.length] };
     }
   }
-  return { next: ordered[0], after: ordered[1] }; // Après Isha
+  return { next: ordered[0], after: ordered[1] };
 }
 
 function updateTimes() {
@@ -163,7 +168,7 @@ function updateTimes() {
   };
 
   const icons = {
-    fajr: "🕋", dhuhr: "🕛", asr: "🕒", maghrib: "🌇", isha: "🌃"
+    fajr: "🍋", dhuhr: "🕛", asr: "🕒", maghrib: "🌇", isha: "🌃"
   };
 
   const now = new Date();
@@ -187,14 +192,15 @@ function updateTimes() {
 
   document.getElementById("times").innerHTML = list;
 
-  // Countdown
   const countdownEl = document.getElementById("countdown");
   const updateCountdown = () => {
     const now = new Date();
-    const diff = Math.max(0, next.time - now);
-    const mins = Math.floor(diff / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
-    countdownEl.innerHTML = `⏳ Prochaine prière (${next.name.charAt(0).toUpperCase() + next.name.slice(1)}) dans ${mins}m ${secs}s`;
+    const totalSeconds = Math.floor((next.time - now) / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    countdownEl.innerHTML = `⏳ Prochaine prière (${next.name.charAt(0).toUpperCase() + next.name.slice(1)}) dans ${hours}h ${mins}m ${secs}s`;
   };
   updateCountdown();
   clearInterval(window.countdownInterval);
@@ -203,17 +209,26 @@ function updateTimes() {
 
 function triggerAlarm(prayerName) {
   if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]); // vibration pattern
+    navigator.vibrate([200, 100, 200]);
     alert(`Vibration activée pour ${prayerName}`);
   } else {
     alert(`Appareil ne prend pas en charge la vibration`);
   }
-
-  // Tu pourrais aussi ajouter un setTimeout ici pour créer un rappel futur
 }
 
+window.calculateTimesManual = function () {
+  const lat = parseFloat(document.getElementById("latitude").value);
+  const lon = parseFloat(document.getElementById("longitude").value);
 
-window.calculateTimesManual = updateTimes;
+  if (isNaN(lat) || isNaN(lon)) {
+    alert("Coordonnées invalides.");
+    return;
+  }
+
+  setClosestCity(lat, lon);
+  updateTimes();
+};
+
 window.onload = () => {
   loadCities();
   updateIshaControls();
