@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <title>AdhanSalat</title>
+  <title>Adhan & Salat</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
@@ -15,137 +16,61 @@
       });
     }
   </script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f9f9f9;
-      color: #333;
-      margin: 0;
-      padding: 1em;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    .prayer-time {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5em 1em;
-      background: #fff;
-      margin-bottom: 0.5em;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-    label, input, select {
-      display: block;
-      width: 100%;
-      margin-top: 0.5em;
-    }
-    .settings {
-      background: #fff;
-      padding: 1em;
-      margin-top: 1em;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-    .error {
-      color: red;
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    .debug {
-      background: #ffe0e0;
-      padding: 0.5em;
-      margin-top: 1em;
-      font-size: 0.9em;
-      color: #900;
-    }
-  </style>
 </head>
 <body>
   <header>
-    <h1>AdhanSalat</h1>
-    <p>Horaires de prière personnalisables</p>
+    <img src="icone.png" alt="AdhanSalat Logo">
+    <h1 id="title">Adhan And Salat</h1>
+    <p id="subtitle">Horaires de prière personnalisables</p>
   </header>
 
-  <div id="error" class="error"></div>
-  <div id="times"></div>
+  <div class="container">
+    <div class="settings">
+      <h2>Réglages</h2>
+      <label>Thème :
+        <select id="themeSelect">
+          <option value="auto">Auto</option>
+          <option value="light">Clair</option>
+          <option value="dark">Sombre</option>
+        </select>
+      </label>
+      <label>Langue :
+        <select id="langSelect">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+      <label>Pays :
+        <select id="countrySelector">
+          <option value="">-- Choisir un pays --</option>
+          <option value="France">France</option>
+        </select>
+      </label>
+      <label>Ville :
+        <select id="citySelector">
+          <option value="">-- Choisir une ville --</option>
+        </select>
+      </label>
+      <button id="gpsBtn">📍 Utiliser ma position</button>
+      <label>Angle Fajr (°): <input type="number" id="angleFajr" value="15"></label>
+      <label>Angle Isha (°): <input type="number" id="angleIsha" value="15"></label>
+      <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
+      <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
+      <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
+      <button class="update-button" onclick="calculateTimesManual()">Mettre à jour</button>
+    </div>
 
-  <div class="settings">
-    <h2>Réglages</h2>
-    <label>Angle Fajr (°): <input type="number" id="angleFajr" value="18"></label>
-    <label>Angle Isha (°): <input type="number" id="angleIsha" value="17"></label>
-    <label>Décalage Isha après Maghreb (minutes): <input type="number" id="maghribToIsha" value="80"></label>
-    <label>Latitude (si GPS désactivé): <input type="number" id="latitude" value="43.8367"></label>
-    <label>Longitude (si GPS désactivé): <input type="number" id="longitude" value="4.3601"></label>
-    <button onclick="calculateTimesManual()">Mettre à jour</button>
+    <div>
+      <div id="error" class="error"></div>
+      <div id="countdown"></div>
+      <div id="cityDisplay" style="text-align:center; font-weight:bold; margin-bottom: 0.5em;"></div>
+      <div id="times"></div>
+    </div>
   </div>
 
-  <div id="debug" class="debug"></div>
-
   <script src="adhan.js"></script>
-  <script>
-    function showError(message) {
-      document.getElementById('error').textContent = message;
-    }
-
-    function showDebug(info) {
-      document.getElementById('debug').textContent = info;
-    }
-
-    function calculateTimes(coords) {
-      try {
-        const params = adhan.CalculationMethod.Other();
-        params.fajrAngle = parseFloat(document.getElementById('angleFajr').value);
-        params.ishaAngle = parseFloat(document.getElementById('angleIsha').value);
-        params.maghribAngle = null;
-
-        const date = new Date();
-        const location = new adhan.Coordinates(coords.latitude, coords.longitude);
-        const prayerTimes = new adhan.PrayerTimes(location, date, params);
-
-        const maghribTime = prayerTimes.maghrib;
-        const ishaOffset = parseInt(document.getElementById('maghribToIsha').value);
-        const customIsha = new Date(maghribTime.getTime() + ishaOffset * 60000);
-
-        const formatTime = time => time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-
-        document.getElementById('times').innerHTML = `
-          <div class="prayer-time"><strong>Fajr</strong><span>${formatTime(prayerTimes.fajr)}</span></div>
-          <div class="prayer-time"><strong>Dhuhr</strong><span>${formatTime(prayerTimes.dhuhr)}</span></div>
-          <div class="prayer-time"><strong>Asr</strong><span>${formatTime(prayerTimes.asr)}</span></div>
-          <div class="prayer-time"><strong>Maghrib</strong><span>${formatTime(prayerTimes.maghrib)}</span></div>
-          <div class="prayer-time"><strong>Isha</strong><span>${formatTime(customIsha)}</span></div>
-        `;
-
-        showDebug(`Position utilisée: latitude ${coords.latitude}, longitude ${coords.longitude}`);
-      } catch (err) {
-        showError("Erreur lors du calcul des horaires.");
-        showDebug(err.toString());
-      }
-    }
-
-    function calculateTimesManual() {
-      const lat = parseFloat(document.getElementById('latitude').value);
-      const lon = parseFloat(document.getElementById('longitude').value);
-      calculateTimes({ latitude: lat, longitude: lon });
-    }
-
-    // Tentative auto au chargement
-    window.onload = () => {
-      if (!navigator.geolocation) {
-        showError("Géolocalisation non supportée. Utilisation de la position manuelle.");
-        calculateTimesManual();
-      } else {
-        navigator.geolocation.getCurrentPosition(
-          pos => calculateTimes(pos.coords),
-          err => {
-            showError("Géolocalisation refusée. Utilisation de la position manuelle.");
-            calculateTimesManual();
-          }
-        );
-      }
-    };
-  </script>
+  <script src="cities.json"></script>
+  <script src="app.js"></script>
 </body>
 </html>
