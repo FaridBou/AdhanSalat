@@ -176,7 +176,13 @@ function updateTimes() {
   const list = Object.entries(times).map(([name, time]) => {
     const timeStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const isNext = name === next.name;
-    return `<div class="prayer-time ${isNext ? "current" : ""}"><strong>${icons[name]} ${name.charAt(0).toUpperCase() + name.slice(1)}</strong><span>${timeStr}</span></div>`;
+    return `
+  <div class="prayer-time ${isNext ? "current" : ""}">
+    <strong>${icons[name]} ${name.charAt(0).toUpperCase() + name.slice(1)}</strong>
+    <span>${timeStr}
+      <button class="alarm-btn" onclick="triggerAlarm('${name}')">🔔</button>
+    </span>
+  </div>`;
   }).join("");
 
   document.getElementById("times").innerHTML = list;
@@ -194,6 +200,18 @@ function updateTimes() {
   clearInterval(window.countdownInterval);
   window.countdownInterval = setInterval(updateCountdown, 1000);
 }
+
+function triggerAlarm(prayerName) {
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]); // vibration pattern
+    alert(`Vibration activée pour ${prayerName}`);
+  } else {
+    alert(`Appareil ne prend pas en charge la vibration`);
+  }
+
+  // Tu pourrais aussi ajouter un setTimeout ici pour créer un rappel futur
+}
+
 
 window.calculateTimesManual = updateTimes;
 window.onload = () => {

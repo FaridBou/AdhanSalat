@@ -150,4 +150,33 @@ h1 {
     max-width: 100%;
   }
 }
+@keyframes fadeInHighlight {
+  from {
+    background-color: transparent;
+    opacity: 0;
+  }
+  to {
+    background-color: var(--highlight);
+    opacity: 1;
+  }
+}
+
+.prayer-time.current {
+  animation: fadeInHighlight 1s ease-in-out;
+  background-color: var(--highlight);
+  font-weight: bold;
+  border: 2px solid var(--primary);
+}
+.alarm-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  margin-left: 0.5em;
+  transition: transform 0.2s ease;
+}
+.alarm-btn:hover {
+  transform: scale(1.2);
+}
+
 
